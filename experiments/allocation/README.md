@@ -1,5 +1,7 @@
 # Allocation and precompiled-schema experiments
 
+Final quiet measurements and conclusions are in [FINAL_RESULTS.md](FINAL_RESULTS.md).
+
 These optional APIs leave the normal message API and wire format unchanged.
 
 ## Approach 13: allocation policies

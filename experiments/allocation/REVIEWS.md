@@ -18,7 +18,8 @@ and held-out logs; complete single-segment arena reset and GIL-confined native
 pool operations. Final conditional signoff: practical allocator/schema approaches
 sufficiently explored, no further implementation blocker. Requested final quiet
 measurements, input-size naming, and runtime service dispatch; all benchmark code
-requests are addressed. Final quiet timing remains for the main-agent phase.
+requests are addressed. Final quiet timing is complete; see FINAL_RESULTS.md for the main-agent results
+and their statistical and scope limitations.
 
 Allocator single-segment reset is a deliberate endpoint: full-workload impact is
 small in exploratory measurements. Reusing arbitrary multisegment graphs adds
