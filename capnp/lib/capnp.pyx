@@ -12,7 +12,7 @@ from capnp.helpers.helpers cimport init_capnp_api
 
 from builtins import memoryview as BuiltinsMemoryview
 from cpython cimport Py_buffer, PyObject_CheckBuffer
-from cpython.buffer cimport PyBUF_SIMPLE, PyBUF_CONTIG_RO
+from cpython.buffer cimport PyBUF_SIMPLE, PyBUF_CONTIG_RO, PyBuffer_FillInfo
 from cpython.exc cimport PyErr_Clear
 from cython.operator cimport dereference as deref
 from libc.stdlib cimport malloc, free
@@ -1821,3 +1821,152 @@ def remove_import_hook():
 def _init_capnp_api():
     """ Initialize static function pointers for cdef api functions. """
     init_capnp_api()
+
+
+# Opt-in experiments: batch operations avoid intermediate Python wrappers.
+cdef extern from "capnp/helpers/bulk.h" namespace "pycapnp_bulk":
+    C_DynamicStruct.Reader bulk_struct_reader "pycapnp_bulk::structReader"(C_DynamicValue.Reader) except +reraise_kj_exception
+    DynamicStruct_Builder bulk_struct_builder "pycapnp_bulk::structBuilder"(C_DynamicValue.Builder) except +reraise_kj_exception
+    C_DynamicList.Reader bulk_list_reader "pycapnp_bulk::listReader"(C_DynamicValue.Reader) except +reraise_kj_exception
+    C_DynamicList.Builder bulk_list_builder "pycapnp_bulk::listBuilder"(C_DynamicValue.Builder) except +reraise_kj_exception
+    const char* bulk_float_pointer "pycapnp_bulk::floatPointer"(C_DynamicList.Reader, size_t*, capnp.cbool*) except +reraise_kj_exception
+    object bulk_float_buffer "pycapnp_bulk::floatBuffer"(C_DynamicList.Reader) except +reraise_kj_exception
+    object bulk_can_frame "pycapnp_bulk::canFrame"(C_DynamicStruct.Reader, C_StructSchema.Field, C_StructSchema.Field, C_StructSchema.Field) except +reraise_kj_exception
+    object bulk_floats "pycapnp_bulk::floats"(C_DynamicList.Reader) except +reraise_kj_exception
+    object bulk_set_floats "pycapnp_bulk::setFloats"(C_DynamicList.Builder, object) except +reraise_kj_exception
+
+
+def _bulk_float_read(_DynamicListReader values not None):
+    """Copy a Float32/Float64 list into independent Python floats in one call."""
+    return bulk_floats(values.thisptr)
+
+
+cdef class _BorrowedFloatBuffer:
+    cdef object parent
+    cdef const char* data
+    cdef size_t size
+
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        PyBuffer_FillInfo(buffer, self, <void*>self.data, self.size, 1, flags)
+
+
+def _bulk_float_view(_DynamicListReader values not None):
+    """Read-only borrowed view on little-endian contiguous lists, copied fallback otherwise.
+
+    The view pins the reader. Mutation through a separate builder alias is visible.
+    """
+    cdef _BorrowedFloatBuffer owner = _BorrowedFloatBuffer()
+    cdef capnp.cbool wide = False
+    owner.data = bulk_float_pointer(values.thisptr, &owner.size, &wide)
+    if owner.data == NULL:
+        return bulk_float_buffer(values.thisptr)
+    owner.parent = values
+    return BuiltinsMemoryview(owner).cast('d' if wide else 'f')
+
+
+def _bulk_float_buffer_read(_DynamicListReader values not None):
+    """Copy floats to a native-format immutable buffer, without Python float objects."""
+    return bulk_float_buffer(values.thisptr)
+
+
+def _bulk_float_write(_DynamicListBuilder target not None, values):
+    """Overwrite an existing float list; conversion errors may partially write it."""
+    return bulk_set_floats(target.thisptr, values)
+
+
+cdef class _BulkCanFields:
+    cdef _StructSchemaField address, dat, src
+    cdef object schema
+
+    def __init__(self, schema):
+        self.schema = schema
+        self.address = schema.fields['address']
+        self.dat = schema.fields['dat']
+        self.src = schema.fields['src']
+
+
+def _bulk_can_read(_DynamicStructReader event not None, msgtype='can', _BulkCanFields fields=None, bint specialized=True):
+    """Decode an Event's CAN payload with no per-frame Python wrapper."""
+    if msgtype not in ('can', 'sendcan'):
+        raise ValueError('expected can or sendcan')
+    cdef C_DynamicList.Reader frames = bulk_list_reader(event.thisptr.get(msgtype))
+    cdef C_DynamicStruct.Reader frame
+    cdef C_StructSchema.Field address, dat, src
+    cdef list result = [None] * frames.size()
+    cdef uint i
+    if frames.size():
+        frame = bulk_struct_reader(frames[0])
+        address = fields.address.thisptr if fields is not None else frame.getSchema().getFieldByName('address')
+        dat = fields.dat.thisptr if fields is not None else frame.getSchema().getFieldByName('dat')
+        src = fields.src.thisptr if fields is not None else frame.getSchema().getFieldByName('src')
+        for i in range(frames.size()):
+            frame = bulk_struct_reader(frames[i])
+            if specialized:
+                result[i] = bulk_can_frame(frame, address, dat, src)
+                continue
+            result[i] = (to_python_reader(frame.getByField(address), event),
+                         to_python_reader(frame.getByField(dat), event),
+                         to_python_reader(frame.getByField(src), event))
+    return (event._get('logMonoTime'), result)
+
+
+def _bulk_can_write(_DynamicStructBuilder event not None, values, msgtype='can', _BulkCanFields fields=None, bint specialized=True):
+    """Initialize an Event CAN payload from (address, bytes, source) tuples."""
+    if msgtype not in ('can', 'sendcan'):
+        raise ValueError('expected can or sendcan')
+    cdef C_DynamicList.Builder frames = bulk_list_builder(event.thisptr.init(msgtype, len(values)))
+    cdef DynamicStruct_Builder frame
+    cdef _StructSchemaField address, dat, src
+    cdef uint i
+    if frames.size():
+        frame = bulk_struct_builder(frames[0])
+        address = fields.address if fields is not None else _StructSchemaField()._init(frame.getSchema().getFieldByName('address'), event)
+        dat = fields.dat if fields is not None else _StructSchemaField()._init(frame.getSchema().getFieldByName('dat'), event)
+        src = fields.src if fields is not None else _StructSchemaField()._init(frame.getSchema().getFieldByName('src'), event)
+        for i in range(frames.size()):
+            frame = bulk_struct_builder(frames[i])
+            value = values[i]
+            if specialized and type(value[0]) is int and type(value[1]) is bytes and type(value[2]) is int:
+                frame.setByField(address.thisptr, C_DynamicValue.Reader(<unsigned long long>value[0]))
+                _setBytesField(frame, dat, value[1])
+                frame.setByField(src.thisptr, C_DynamicValue.Reader(<unsigned long long>value[2]))
+                continue
+            _setDynamicFieldWithField(frame, address, value[0], event)
+            _setDynamicFieldWithField(frame, dat, value[1], event)
+            _setDynamicFieldWithField(frame, src, value[2], event)
+    return event
+
+
+def _bulk_read_fields(messages, bint numeric=False, bint collect=False):
+    """Compiled equivalent of benchmark read_fields; numeric is a separate ablation."""
+    cdef _DynamicStructReader msg, body, nested, lead
+    result = [] if collect else None
+    for msg in messages:
+        if msg is None:
+            raise TypeError('expected an Event reader')
+        kind = msg._which()._str()
+        body = msg._get(kind) if kind in ('carState', 'carControl', 'modelV2', 'longitudinalPlan') else None
+        _ = msg._get('valid'), msg._get('logMonoTime')
+        if collect:
+            metadata = _
+        if body is None:
+            _ = msg._get(kind)
+        elif kind == 'carState':
+            nested = body._get('wheelSpeeds')
+            _ = body._get('vEgo'), body._get('steeringAngleDeg'), nested._get('fl'), body._get('gearShifter').raw
+        elif kind == 'carControl':
+            nested = body._get('actuators')
+            _ = body._get('enabled'), nested._get('accel'), nested._get('torque')
+        elif kind == 'modelV2':
+            nested = body._get('position')
+            x = _bulk_float_read(nested._get('x')) if numeric else list(nested._get('x'))
+            leads = [(_bulk_float_read(lead._get('x')) if numeric else list(lead._get('x'))) for lead in body._get('leadsV3')]
+            nested = body._get('meta')
+            _ = x, leads, nested._get('laneChangeState').raw
+        elif kind == 'longitudinalPlan':
+            _ = (_bulk_float_read(body._get('speeds')) if numeric else list(body._get('speeds')),
+                 _bulk_float_read(body._get('accels')) if numeric else list(body._get('accels')), body._get('shouldStop'))
+
+        if collect:
+            result.append((kind, metadata, _))
+    return result
