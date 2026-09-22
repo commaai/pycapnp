@@ -134,6 +134,7 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             DynamicValueForward.Reader get(char *) except +reraise_kj_exception
             DynamicValueForward.Reader getByField"get"(StructSchema.Field) except +reraise_kj_exception
             bint has(char *) except +reraise_kj_exception
+            bint hasByField"has"(StructSchema.Field) except +reraise_kj_exception
             StructSchema getSchema()
             Maybe[StructSchema.Field] which()
             MessageSize totalSize() except +reraise_kj_exception

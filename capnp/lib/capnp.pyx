@@ -586,50 +586,52 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField
             .format(field, str(value), str(type(value))))
 
 
+cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose):
+    cdef int kind = value.getType()
+    cdef C_DynamicList.Reader values
+    cdef uint i
+    if kind == capnp.TYPE_STRUCT:
+        return _struct_to_dict(value.asStruct(), verbose)
+    if kind == capnp.TYPE_LIST:
+        values = value.asList()
+        return [_value_to_dict(values[i], verbose) for i in range(values.size())]
+    if kind == capnp.TYPE_ENUM:
+        return <char*>helpers.fixMaybe(value.asEnum().getEnumerant()).getProto().getName().cStr()
+    return to_python_reader(value, None)
+
+
+cdef _struct_to_dict(C_DynamicStruct.Reader msg, bint verbose):
+    cdef C_StructSchema.Field field
+    cdef C_StructSchema.FieldSubset fields = msg.getSchema().getNonUnionFields()
+    cdef uint i
+    cdef dict result = {}
+    if helpers.tryWhich(msg, &field):
+        result[<char*>field.getProto().getName().cStr()] = _value_to_dict(msg.getByField(field), verbose)
+    for i in range(fields.size()):
+        field = fields[i]
+        if verbose or msg.hasByField(field):
+            result[<char*>field.getProto().getName().cStr()] = _value_to_dict(msg.getByField(field), verbose)
+    return result
+
+
 cdef _to_dict(msg, bint verbose):
+    cdef C_DynamicList.Reader values
+    cdef uint i
     msg_type = type(msg)
-    if msg_type is _DynamicListBuilder:
-        temp_list_b = msg
-        return [_to_dict(temp_list_b._get(i), verbose) for i in range(len(msg))]
-    elif msg_type is _DynamicListReader:
-        temp_list_r = msg
-        return [_to_dict(temp_list_r._get(i), verbose) for i in range(len(msg))]
-
+    if msg_type is _DynamicStructReader:
+        return _struct_to_dict((<_DynamicStructReader>msg).thisptr, verbose)
     if msg_type is _DynamicStructBuilder:
-        temp_msg_b = msg
-        ret = {}
-        try:
-            which = temp_msg_b.which()
-            ret[which] = _to_dict(temp_msg_b._get(which), verbose)
-        except KjException:
-            pass
-
-        for field in temp_msg_b.schema.non_union_fields:
-            if verbose or temp_msg_b._has(field):
-                ret[field] = _to_dict(temp_msg_b._get(field), verbose)
-
-        return ret
-    elif msg_type is _DynamicStructReader:
-        temp_msg_r = msg
-        ret = {}
-        try:
-            which = temp_msg_r.which()
-            ret[which] = _to_dict(temp_msg_r._get(which), verbose)
-        except KjException:
-            pass
-
-        for field in temp_msg_r.schema.non_union_fields:
-            if verbose or temp_msg_r._has(field):
-                ret[field] = _to_dict(temp_msg_r._get(field), verbose)
-
-        return ret
-
+        return _struct_to_dict((<_DynamicStructBuilder>msg).thisptr.asReader(), verbose)
+    if msg_type is _DynamicListReader:
+        values = (<_DynamicListReader>msg).thisptr
+        return [_value_to_dict(values[i], verbose) for i in range(values.size())]
+    if msg_type is _DynamicListBuilder:
+        values = (<_DynamicListBuilder>msg).thisptr.asReader()
+        return [_value_to_dict(values[i], verbose) for i in range(values.size())]
     if isinstance(msg, (_DynamicStructBuilder, _DynamicStructReader)):
         return msg.to_dict(verbose)
-
     if msg_type is _DynamicEnum:
         return str(msg)
-
     return msg
 
 
