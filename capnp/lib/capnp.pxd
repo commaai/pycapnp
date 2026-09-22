@@ -71,9 +71,10 @@ cdef class _DynamicStructBuilder:
     cpdef copy(self)
 
 cdef class _DynamicEnumField:
-    cdef object thisptr
+    cdef object name
+    cdef uint16_t discriminant
 
-    cdef _init(self, proto)
+    cdef _init(self, C_StructSchema.Field field)
     cpdef _str(self)
 
 cdef class _Schema:

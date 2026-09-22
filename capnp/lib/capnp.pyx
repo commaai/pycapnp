@@ -687,17 +687,18 @@ cdef class _DynamicEnum:
 
 
 cdef class _DynamicEnumField:
-    cdef _init(self, proto):
-        self.thisptr = proto
+    cdef _init(self, C_StructSchema.Field field):
+        self.name = <char*>field.getProto().getName().cStr()
+        self.discriminant = field.getProto().getDiscriminantValue()
         return self
 
     property raw:
         """A property that returns the raw int of the enum"""
         def __get__(self):
-            return self.thisptr.discriminantValue
+            return self.discriminant
 
     cpdef _str(self):
-        return self.thisptr.name
+        return self.name
 
     def __str__(self):
         return self._str()
@@ -707,9 +708,9 @@ cdef class _DynamicEnumField:
 
     def __richcmp__(_DynamicEnumField self, right, int op):
         if isinstance(right, basestring):
-            left = self.thisptr.name
+            left = self.name
         else:
-            left = self.thisptr.discriminantValue
+            left = self.discriminant
 
         if op == 2: # ==
             return left == right
@@ -790,7 +791,7 @@ cdef class _DynamicStructReader:
         """
         try:
             which = _DynamicEnumField()._init(
-                _StructSchemaField()._init(helpers.fixMaybe(self.thisptr.which()), self).proto)
+                helpers.fixMaybe(self.thisptr.which()))
         except RuntimeError as e:
             if str(e) == "Member was null.":
                 raise KjException("Attempted to call which on a non-union type")
@@ -965,7 +966,7 @@ cdef class _DynamicStructBuilder:
         """
         try:
             which = _DynamicEnumField()._init(
-                _StructSchemaField()._init(helpers.fixMaybe(self.thisptr.which()), self).proto)
+                helpers.fixMaybe(self.thisptr.which()))
         except RuntimeError as e:
             if str(e) == "Member was null.":
                 raise KjException("Attempted to call which on a non-union type")
