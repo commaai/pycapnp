@@ -146,3 +146,47 @@ fallbacks, non-AttributeError propagation, refcounts, reload, and schema isolati
 See `trampoline-*.txt/json`; `trampoline-metadata.json` identifies the new binary.
 Earlier `metadata.json` and local timings identify the pre-trampoline experiment.
 Final trampoline timing is deliberately deferred to the root's sequential runs.
+
+
+## Final root-controlled measurements
+
+Final interleaved runs used the frozen trampoline binary on CPU 0. The original
+route used three alternating rounds; held-out Ascent used two. Each process ran
+five repetitions per case. Provenance and full samples are in
+`experiments/results/dynamic-final-route.json` and `dynamic-final-heldout.json`
+in the main repository. These replace the exploratory numbers above for claims.
+
+| Case | Route baseline → final, µs/item | Held-out baseline → final, µs/item |
+|---|---:|---:|
+| live read | 3.70 → 2.18 | 3.70 → 2.10 |
+| field write+encode | 24.35 → 22.41 | 19.02 → 17.45 |
+| kwargs write+encode | 28.92 → 8.87 | 25.78 → 7.33 |
+| payload assignment | 1.22 → 1.25 | 1.26 → 1.25 |
+| CAN cached read | 23.19 → 21.79 | 11.31 → 10.90 |
+| CAN cached write | 20.18 → 19.15 | 10.80 → 10.36 |
+| LogReader parse+scan | 3.57 → 1.84 | 3.38 → 1.83 |
+| dict export | 64.84 → 10.43 | 48.95 → 8.52 |
+| copy+encode | 0.70 → 0.70 | 0.70 → 0.69 |
+| reader pickle | 2.89 → 2.53 | 2.84 → 2.54 |
+| LogReader pickle | 3.34 → 3.18 | 3.28 → 3.26 |
+| schema reflection | 299.78 → 131.33 | 298.09 → 131.57 |
+
+CAN units remain per batch; schema reflection is per traversal. Payload assignment
+is near flat: about 2.5% slower on the route and 0.8% faster held-out. Copy/encode
+is also near flat. The changes do **not** make every benchmark faster.
+
+The direct pre/post-trampoline comparison isolated the ordinary-method fix:
+CAN read **23.42 → 22.01 µs**, write **20.82 → 19.53 µs**, and copy/encode
+**0.72 → 0.69 µs**. Its kwargs median **8.86 → 9.15 µs** combined two distinct
+candidate process bands (**9.38** and **8.92 µs**) with tight within-process
+samples. The final-route runs again showed roughly **9.38** and **8.86–8.87 µs**.
+This is unexplained process-level variation, not evidence of ordinary sample
+noise or an established persistent 3% code regression. Hash seed was fixed by
+the root harness; layout, allocator, run-order, or host effects remain hypotheses.
+
+Both independent reviewers accepted the final bounded dynamic-binding family:
+correctness checks found no blockers, and performance results support the native
+trampoline mechanism with no remaining high-confidence missing fast path. Future
+single-payload special cases or deeper schema specialization require new profiles
+and measurement; they are not established gains. No runtime source changed
+during these final comparisons.

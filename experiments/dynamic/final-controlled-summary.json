@@ -1,0 +1,102 @@
+{
+  "dynamic-final-route": {
+    "live read": {
+      "baseline": 3.7,
+      "candidate": 2.18
+    },
+    "field write+encode": {
+      "baseline": 24.35,
+      "candidate": 22.41
+    },
+    "kwargs write+encode": {
+      "baseline": 28.92,
+      "candidate": 8.87
+    },
+    "payload assignment": {
+      "baseline": 1.22,
+      "candidate": 1.25
+    },
+    "CAN cached read": {
+      "baseline": 23.19,
+      "candidate": 21.79
+    },
+    "CAN cached write": {
+      "baseline": 20.18,
+      "candidate": 19.15
+    },
+    "LogReader parse+scan": {
+      "baseline": 3.57,
+      "candidate": 1.84
+    },
+    "dict export": {
+      "baseline": 64.84,
+      "candidate": 10.43
+    },
+    "copy+encode": {
+      "baseline": 0.7,
+      "candidate": 0.7
+    },
+    "reader pickle": {
+      "baseline": 2.89,
+      "candidate": 2.53
+    },
+    "LogReader pickle": {
+      "baseline": 3.34,
+      "candidate": 3.18
+    },
+    "schema reflection": {
+      "baseline": 299.78,
+      "candidate": 131.33
+    }
+  },
+  "dynamic-final-heldout": {
+    "live read": {
+      "baseline": 3.6950000000000003,
+      "candidate": 2.0999999999999996
+    },
+    "field write+encode": {
+      "baseline": 19.025,
+      "candidate": 17.455
+    },
+    "kwargs write+encode": {
+      "baseline": 25.78,
+      "candidate": 7.33
+    },
+    "payload assignment": {
+      "baseline": 1.26,
+      "candidate": 1.25
+    },
+    "CAN cached read": {
+      "baseline": 11.315,
+      "candidate": 10.9
+    },
+    "CAN cached write": {
+      "baseline": 10.805,
+      "candidate": 10.355
+    },
+    "LogReader parse+scan": {
+      "baseline": 3.375,
+      "candidate": 1.8250000000000002
+    },
+    "dict export": {
+      "baseline": 48.955,
+      "candidate": 8.52
+    },
+    "copy+encode": {
+      "baseline": 0.7,
+      "candidate": 0.695
+    },
+    "reader pickle": {
+      "baseline": 2.84,
+      "candidate": 2.545
+    },
+    "LogReader pickle": {
+      "baseline": 3.2800000000000002,
+      "candidate": 3.26
+    },
+    "schema reflection": {
+      "baseline": 298.08500000000004,
+      "candidate": 131.575
+    }
+  }
+}
