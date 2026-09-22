@@ -114,6 +114,7 @@ def main():
     assert repr(_bulk_read_fields(hot, True, True)) == repr(projection(hot))
     values = [list(f) for f in floats]
     arrays = [np.array(v, dtype=np.float32) for v in values]
+    arrays64 = [np.array(v, dtype=np.float64) for v in values]
     for f in floats:
         np.testing.assert_array_equal(np.asarray(_bulk_float_buffer_read(f)), np.array(list(f), dtype=np.float32))
         np.testing.assert_array_equal(np.asarray(_bulk_float_view(f)), np.array(list(f), dtype=np.float32))
@@ -122,8 +123,8 @@ def main():
         for b, v in zip(builders, values):
             for i, x in enumerate(v):
                 b[i] = x
-    def scalar_array_write():
-        for b, v in zip(builders, arrays):
+    def scalar_array_write(source=arrays):
+        for b, v in zip(builders, source):
             for i, x in enumerate(v):
                 b[i] = float(x)
     def bulk_write():
@@ -139,6 +140,7 @@ def main():
         'float write': (scalar_write, bulk_write, len(values)),
         'float numpy read': (lambda: [np.array(list(f), dtype=np.float32) for f in floats], lambda: [np.asarray(_bulk_float_buffer_read(f)) for f in floats], len(floats)),
         'float numpy borrowed': (lambda: [np.asarray(_bulk_float_buffer_read(f)) for f in floats], lambda: [np.asarray(_bulk_float_view(f)) for f in floats], len(floats)),
+        'float crosswidth write': (lambda: scalar_array_write(arrays64), lambda: [_bulk_float_write(b, v) for b, v in zip(builders, arrays64)], len(values)),
         'float buffer write': (scalar_array_write, lambda: [_bulk_float_write(b, v) for b, v in zip(builders, arrays)], len(values)),
         'consumer same caching': (lambda: read_fields_cached(messages), lambda: _bulk_read_fields(messages), len(messages)),
         'consumer': (lambda: read_fields(messages), lambda: _bulk_read_fields(messages), len(messages)),

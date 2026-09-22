@@ -27,4 +27,8 @@ of length 33. These sizes explain why native buffer setup remains material even 
 all per-element Python operations. Copied-to-borrowed buffer comparison changes aliasing semantics.
 
 The original 100-line benchmark also completes unchanged (`original-benchmark.txt`). Core
-package tests: 50 passed, 5 skipped; bulk-specific tests: 26 passed.
+package tests: 50 passed, 5 skipped; bulk-specific tests: 27 passed.
+
+The additional cross-width Float64-buffer to Float32-list conversion copies the source first
+to preserve overlapping aliases. `crosswidth.json` measures 2.466 versus 0.140 us/list (17.66x)
+against the matching scalar NumPy loop after the alias fix and forced rebuild.

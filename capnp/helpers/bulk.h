@@ -85,12 +85,17 @@ template <typename T> int writeFloats(capnp::DynamicList::Builder target, PyObje
       PyBuffer_Release(&buffer);
       return 0;
     }
-    const char* data = static_cast<const char*>(buffer.buf);
+    // Differing-width views may alias target storage. Snapshot before conversion,
+    // otherwise the first write can overwrite later source elements.
+    PyObject* snapshot = PyBytes_FromStringAndSize(static_cast<const char*>(buffer.buf), buffer.len);
+    PyBuffer_Release(&buffer);
+    if (!snapshot) return -1;
+    const char* data = PyBytes_AS_STRING(snapshot);
     for (unsigned i = 0; i < values.size(); ++i) {
       if (f32) { float value; std::memcpy(&value, data + i * 4, 4); values.set(i, static_cast<T>(value)); }
       else { double value; std::memcpy(&value, data + i * 8, 8); values.set(i, static_cast<T>(value)); }
     }
-    PyBuffer_Release(&buffer);
+    Py_DECREF(snapshot);
     return 0;
   }
   PyObject* seq = PySequence_Tuple(source);

@@ -146,3 +146,11 @@ def test_cached_wrong_schema(schema):
     path = schema.FakeEvent.new_message(can=[{'address': 1, 'dat': b'a', 'src': 0}])
     with pytest.raises(capnp.KjException):
         _bulk_can_read(path.as_reader(), fields=wrong)
+
+
+def test_different_width_buffer_alias(schema):
+    event = schema.Floats.new_message(f64=[1., 2.])
+    view = _bulk_float_view(event.as_reader().f64).cast('B').cast('f')[:2]
+    expected = list(view)
+    _bulk_float_write(event.f64, view)
+    assert list(event.f64) == expected

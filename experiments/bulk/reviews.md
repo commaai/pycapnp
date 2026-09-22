@@ -8,7 +8,7 @@ extension arguments, since Cython otherwise accepts None and native member acces
 
 Rereview found no remaining concrete blocker in core paths. Independently checked Float64,
 empty views, parent deletion/GC, same-buffer writes, and None rejection. Confirmed cached
-field access validates containing schemas. Requested edge-case tests were added (26 pass).
+field access validates containing schemas. Requested edge-case tests were added (27 pass).
 
 Borrowed views intentionally differ from independent copies: they pin storage and expose
 mutations through separate builder aliases. Tests and documentation preserve this distinction.
@@ -30,3 +30,8 @@ repeat (`buffer-repeat.json`) measured 22.38x, with baseline 2.467–2.552 us/li
 
 These approvals concern implemented paths and evidence, not a proof that every conceivable
 optimization has been exhausted. Main-agent review and quiet final measurements remain separate.
+
+Additional main-worker self-review found overlapping buffers with different float widths could
+clobber unread source values. The conversion fallback now snapshots source bytes first; the
+same-width path remains memmove. Independent correctness rereview approved the fix, and its
+new regression passes. The dedicated cross-width benchmark measures 17.66x with tight spreads.
