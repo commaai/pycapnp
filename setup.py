@@ -5,6 +5,7 @@ pycapnp distutils setup.py
 
 import os
 import shutil
+import shlex
 
 from distutils.command.clean import clean as _clean
 
@@ -92,6 +93,8 @@ class build_libcapnp_ext(build_ext_c):
             str(build),
             "-DCMAKE_BUILD_TYPE=Release",
         ]
+        if os.environ.get("PYCAPNP_OPT_FLAGS"):
+            args.append("-DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG " + os.environ["PYCAPNP_OPT_FLAGS"])
         if os.environ.get("CMAKE_OSX_ARCHITECTURES"):
             args.append("-DCMAKE_OSX_ARCHITECTURES=" + os.environ["CMAKE_OSX_ARCHITECTURES"])
         if os.environ.get("MACOSX_DEPLOYMENT_TARGET"):
@@ -102,11 +105,16 @@ class build_libcapnp_ext(build_ext_c):
         for extension in self.extensions:
             extension.include_dirs.insert(0, str(source / "src"))
             extension.extra_objects = [archive]
-            extension.depends = [str(p) for p in source.rglob("*") if p.is_file()] + [archive]
+            extension.depends = (
+                [str(p) for p in source.rglob("*") if p.is_file()]
+                + [str(p) for p in Path(_this_dir, "capnp").rglob("*.h")]
+                + [archive]
+            )
         return build_ext_c.run(self)
 
 
-extra_compile_args = ["-std=c++17", "-pthread"]
+optimization_flags = shlex.split(os.environ.get("PYCAPNP_OPT_FLAGS", ""))
+extra_compile_args = ["-std=c++17", "-pthread"] + optimization_flags
 import Cython.Build  # noqa: E402
 import Cython  # noqa: E402
 
@@ -118,7 +126,7 @@ extensions = [
             "capnp/lib/*.pyx",
         ],
         extra_compile_args=extra_compile_args,
-        extra_link_args=["-pthread"],
+        extra_link_args=["-pthread"] + optimization_flags,
         language="c++",
     )
 ]

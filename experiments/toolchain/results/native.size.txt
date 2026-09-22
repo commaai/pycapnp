@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+2230024	  51760	   7576	2289360	 22eed0	/tmp/capnp-speed/toolchain/experiments/toolchain/results/native.so

@@ -1,0 +1,26 @@
+.............sssss..................F..................                  [100%]
+=================================== FAILURES ===================================
+__________________________________ test_enum ___________________________________
+
+addressbook = <module 'addressbook.capnp' from '/tmp/capnp-speed/toolchain/test/addressbook.capnp'>
+
+    def test_enum(addressbook):
+        addresses = addressbook.AddressBook.new_message()
+        people = addresses.init("people", 2)
+    
+        alice = people[0]
+        phones = alice.init("phones", 2)
+    
+        assert phones[0].type == phones[1].type
+    
+        phones[0].type = addressbook.Person.PhoneNumber.Type.home
+    
+>       assert phones[0].type != phones[1].type
+E       assert <home enum> != <mobile enum>
+E        +  where <home enum> = <addressbook.capnp:Person.PhoneNumber builder (type = home)>.type
+E        +  and   <mobile enum> = <addressbook.capnp:Person.PhoneNumber builder (type = mobile)>.type
+
+test/test_struct.py:95: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_struct.py::test_enum - assert <home enum> != <mobile enum>
+1 failed, 49 passed, 5 skipped in 0.14s

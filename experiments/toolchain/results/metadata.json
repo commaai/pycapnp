@@ -1,0 +1,23 @@
+{
+  "arguments": {
+    "build_python": "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/bin/python",
+    "bench_python": "/home/batman/openpilot/.venv/bin/python",
+    "openpilot": "/home/batman/openpilot",
+    "train": "/tmp/pr3704_logs/0.rlog.zst",
+    "evaluate": "/tmp/pr3704_logs/1.rlog.zst",
+    "cpu": "17",
+    "build_cpus": "18,19",
+    "variants": [
+      "clang-pgo-thinlto-native-hidden"
+    ],
+    "repeat": 7
+  },
+  "abi": "cpython-312-x86_64-linux-gnu",
+  "cython": "3.3.0",
+  "source_diff": "diff --git a/setup.py b/setup.py\nindex 5c5033e..44fea56 100644\n--- a/setup.py\n+++ b/setup.py\n@@ -5,6 +5,7 @@ pycapnp distutils setup.py\n \n import os\n import shutil\n+import shlex\n \n from distutils.command.clean import clean as _clean\n \n@@ -92,6 +93,8 @@ class build_libcapnp_ext(build_ext_c):\n             str(build),\n             \"-DCMAKE_BUILD_TYPE=Release\",\n         ]\n+        if os.environ.get(\"PYCAPNP_OPT_FLAGS\"):\n+            args.append(\"-DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG \" + os.environ[\"PYCAPNP_OPT_FLAGS\"])\n         if os.environ.get(\"CMAKE_OSX_ARCHITECTURES\"):\n             args.append(\"-DCMAKE_OSX_ARCHITECTURES=\" + os.environ[\"CMAKE_OSX_ARCHITECTURES\"])\n         if os.environ.get(\"MACOSX_DEPLOYMENT_TARGET\"):\n@@ -102,11 +105,14 @@ class build_libcapnp_ext(build_ext_c):\n         for extension in self.extensions:\n             extension.include_dirs.insert(0, str(source / \"src\"))\n             extension.extra_objects = [archive]\n-            extension.depends = [str(p) for p in source.rglob(\"*\") if p.is_file()] + [archive]\n+            extension.depends = [str(p) for p in source.rglob(\"*\") if p.is_file()] + [\n+                str(p) for p in Path(_this_dir, \"capnp\").rglob(\"*.h\")\n+            ] + [archive]\n         return build_ext_c.run(self)\n \n \n-extra_compile_args = [\"-std=c++17\", \"-pthread\"]\n+optimization_flags = shlex.split(os.environ.get(\"PYCAPNP_OPT_FLAGS\", \"\"))\n+extra_compile_args = [\"-std=c++17\", \"-pthread\"] + optimization_flags\n import Cython.Build  # noqa: E402\n import Cython  # noqa: E402\n \n@@ -118,7 +124,7 @@ extensions = [\n             \"capnp/lib/*.pyx\",\n         ],\n         extra_compile_args=extra_compile_args,\n-        extra_link_args=[\"-pthread\"],\n+        extra_link_args=[\"-pthread\"] + optimization_flags,\n         language=\"c++\",\n     )\n ]\n",
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "logs": {
+    "train": "d34169fa4af2109089f56dc474f05ca6fac7bd19f57ba20cd5d453e78727619c",
+    "evaluate": "0cd538d9c73d64271d98f908d02465f7513ed2d79c8e4ea0d76a59ff26f6446b"
+  }
+}

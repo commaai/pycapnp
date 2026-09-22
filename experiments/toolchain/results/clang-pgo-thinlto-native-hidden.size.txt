@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+1563203	  49832	   8416	1621451	 18bdcb	/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang-pgo-thinlto-native-hidden.so

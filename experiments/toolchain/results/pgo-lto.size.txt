@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+1454584	  50128	   7552	1512264	 171348	/tmp/capnp-speed/toolchain/experiments/toolchain/results/pgo-lto.so

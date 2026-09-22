@@ -1,0 +1,37 @@
+{
+  "arguments": {
+    "build_python": "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/bin/python",
+    "bench_python": "/home/batman/openpilot/.venv/bin/python",
+    "openpilot": "/home/batman/openpilot",
+    "train": "/tmp/pr3704_logs/0.rlog.zst",
+    "evaluate": "/tmp/pr3704_logs/1.rlog.zst",
+    "cpu": "17",
+    "build_cpus": "18,19",
+    "variants": [
+      "clang-pgo-thinlto-native-hidden"
+    ],
+    "repeat": 7
+  },
+  "abi": "cpython-312-x86_64-linux-gnu",
+  "cython": "3.3.0",
+  "source_diff": "diff --git a/setup.py b/setup.py\nindex 5c5033e..44fea56 100644\n--- a/setup.py\n+++ b/setup.py\n@@ -5,6 +5,7 @@ pycapnp distutils setup.py\n \n import os\n import shutil\n+import shlex\n \n from distutils.command.clean import clean as _clean\n \n@@ -92,6 +93,8 @@ class build_libcapnp_ext(build_ext_c):\n             str(build),\n             \"-DCMAKE_BUILD_TYPE=Release\",\n         ]\n+        if os.environ.get(\"PYCAPNP_OPT_FLAGS\"):\n+            args.append(\"-DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG \" + os.environ[\"PYCAPNP_OPT_FLAGS\"])\n         if os.environ.get(\"CMAKE_OSX_ARCHITECTURES\"):\n             args.append(\"-DCMAKE_OSX_ARCHITECTURES=\" + os.environ[\"CMAKE_OSX_ARCHITECTURES\"])\n         if os.environ.get(\"MACOSX_DEPLOYMENT_TARGET\"):\n@@ -102,11 +105,14 @@ class build_libcapnp_ext(build_ext_c):\n         for extension in self.extensions:\n             extension.include_dirs.insert(0, str(source / \"src\"))\n             extension.extra_objects = [archive]\n-            extension.depends = [str(p) for p in source.rglob(\"*\") if p.is_file()] + [archive]\n+            extension.depends = [str(p) for p in source.rglob(\"*\") if p.is_file()] + [\n+                str(p) for p in Path(_this_dir, \"capnp\").rglob(\"*.h\")\n+            ] + [archive]\n         return build_ext_c.run(self)\n \n \n-extra_compile_args = [\"-std=c++17\", \"-pthread\"]\n+optimization_flags = shlex.split(os.environ.get(\"PYCAPNP_OPT_FLAGS\", \"\"))\n+extra_compile_args = [\"-std=c++17\", \"-pthread\"] + optimization_flags\n import Cython.Build  # noqa: E402\n import Cython  # noqa: E402\n \n@@ -118,7 +124,7 @@ extensions = [\n             \"capnp/lib/*.pyx\",\n         ],\n         extra_compile_args=extra_compile_args,\n-        extra_link_args=[\"-pthread\"],\n+        extra_link_args=[\"-pthread\"] + optimization_flags,\n         language=\"c++\",\n     )\n ]\n",
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "logs": {
+    "train": "d34169fa4af2109089f56dc474f05ca6fac7bd19f57ba20cd5d453e78727619c",
+    "evaluate": "0cd538d9c73d64271d98f908d02465f7513ed2d79c8e4ea0d76a59ff26f6446b"
+  },
+  "flags": "-O3 -flto=thin -fuse-ld=lld -fvisibility=hidden -fno-semantic-interposition -march=native -fprofile-instr-use=/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang-pgo-thinlto-native-hidden-profiles/training.profdata -Werror=profile-instr-out-of-date",
+  "actual_compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+  "experiment_source_sha256": {
+    "setup.py": "1f19290c573c91fa15d46e609bc4632d6d2737f8e1050ce35449c29fe8c7f51a",
+    "capnp/lib/capnp.cpp": "bf43fbc32c5567bdbf12edd7b83eca9d3eb7e8e8f70f83751cd985d80a8755cb",
+    "test/test_toolchain.py": "cae2f9c5122aa04dda806c15e38dada7048ab07a340870f86bc4420c2a19b5e0",
+    "experiments/toolchain/audit.py": "a925c1cd26baaab3c31f2a30ae58b3a4b82d19eb444a6c18a91d09a867366500",
+    "experiments/toolchain/check.py": "3db0d6335ca93009d07f3c5eeb3f1652507887cdb5cc59b8c4a573218127690f",
+    "experiments/toolchain/compare.py": "a173bbe1260bafc246151a8489bb3821b7cba7008c4fdd3870e91ed6a7f99dd1",
+    "experiments/toolchain/run.py": "f43af344ba5ab8fcac0d562991baec7c0156781267fed3da7e7c686197afec10",
+    "experiments/toolchain/summarize.py": "20f85018e5d55bca3368a542be997189298375140bb26c29da54ecabb0513ad8"
+  },
+  "binary_sha256": "fec3c74c3a765dc19c5123759bb7b9c692117eff6c210232bd17fe372976f1a4",
+  "commit": "b8ec065b16290deb62e309b0443e6a8ccec23259"
+}

@@ -1,0 +1,56 @@
+running build_ext
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/capnp-speed/toolchain/build/temp.linux-x86_64-cpython-312/capnproto
+[  5%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/arena.c++.o
+[  5%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/blob.c++.o
+[  7%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/layout.c++.o
+[ 10%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/message.c++.o
+[ 13%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema.capnp.c++.o
+[ 15%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/serialize.c++.o
+[ 18%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema.c++.o
+[ 21%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema-loader.c++.o
+[ 23%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/dynamic.c++.o
+[ 26%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/stringify.c++.o
+[ 28%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/type-id.c++.o
+[ 31%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/lexer.c++.o
+[ 34%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/grammar.capnp.c++.o
+[ 36%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/parser.c++.o
+[ 39%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/generics.c++.o
+[ 42%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/node-translator.c++.o
+[ 44%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/compiler.c++.o
+[ 47%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema-parser.c++.o
+[ 50%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/array.c++.o
+[ 52%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/common.c++.o
+[ 55%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/debug.c++.o
+[ 57%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/exception.c++.o
+[ 60%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/io.c++.o
+[ 63%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/mutex.c++.o
+[ 65%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/string.c++.o
+[ 68%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/source-location.c++.o
+[ 71%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/hash.c++.o
+[ 76%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/arena.c++.o
+[ 76%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/table.c++.o
+[ 78%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/units.c++.o
+[ 81%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/encoding.c++.o
+[ 84%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/refcount.c++.o
+[ 86%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/string-tree.c++.o
+[ 89%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/time.c++.o
+[ 92%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/filesystem.c++.o
+[ 94%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/filesystem-disk-unix.c++.o
+[ 97%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/parse/char.c++.o
+[100%] Linking CXX static library libcapnp-vendored.a
+[100%] Built target capnp-vendored
+building 'capnp.lib.capnp' extension
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fPIC -fPIC -I/tmp/capnp-speed/toolchain/vendor/capnproto/src -I. -I/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/include -I/home/batman/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/include/python3.12 -c capnp/helpers/exception.cpp -o build/temp.linux-x86_64-cpython-312/capnp/helpers/exception.o -std=c++17 -pthread -O3 -flto=2
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fPIC -fPIC -I/tmp/capnp-speed/toolchain/vendor/capnproto/src -I. -I/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/include -I/home/batman/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/include/python3.12 -c capnp/lib/capnp.cpp -o build/temp.linux-x86_64-cpython-312/capnp/lib/capnp.o -std=c++17 -pthread -O3 -flto=2
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fPIC -shared -Wl,--exclude-libs,ALL -LModules/_hacl build/temp.linux-x86_64-cpython-312/capnp/helpers/exception.o build/temp.linux-x86_64-cpython-312/capnp/lib/capnp.o /tmp/capnp-speed/toolchain/build/temp.linux-x86_64-cpython-312/capnproto/libcapnp-vendored.a -L/home/batman/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib -o /tmp/capnp-speed/toolchain/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so -pthread -O3 -flto=2

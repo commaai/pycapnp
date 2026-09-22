@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+1808957	  50056	   7576	1866589	 1c7b5d	/tmp/capnp-speed/toolchain/experiments/toolchain/results/lto.so

@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+2133356	  51760	   7576	2192692	 217534	/tmp/capnp-speed/toolchain/experiments/toolchain/results/baseline.so

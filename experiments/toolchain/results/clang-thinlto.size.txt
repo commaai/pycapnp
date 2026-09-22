@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+1590032	  49792	  10312	1650136	 192dd8	/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang-thinlto.so

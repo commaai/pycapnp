@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+1578363	  51096	   7368	1636827	 18f9db	/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang.so

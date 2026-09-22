@@ -1,0 +1,123 @@
+running build_ext
+-- The CXX compiler identification is Clang 18.1.3
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Configuring done (0.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/capnp-speed/toolchain/build/temp.linux-x86_64-cpython-312/capnproto
+[  5%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/blob.c++.o
+[  5%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/arena.c++.o
+clang++clang++: : warning: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+
+[  7%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/layout.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 10%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/message.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 13%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema.capnp.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 15%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/serialize.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 18%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 21%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema-loader.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 23%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/dynamic.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 26%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/stringify.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 28%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/type-id.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 31%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/lexer.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 34%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/grammar.capnp.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 36%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/parser.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 39%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/generics.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 42%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/node-translator.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 44%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/compiler/compiler.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 47%] Building CXX object CMakeFiles/capnp-vendored.dir/src/capnp/schema-parser.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 50%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/array.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 52%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/common.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 55%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/debug.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 57%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/exception.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 60%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/io.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 63%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/mutex.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 65%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/string.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 68%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/source-location.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 71%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/hash.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 73%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/table.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 76%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/arena.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 78%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/units.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 81%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/encoding.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 84%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/refcount.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 86%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/string-tree.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 89%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/time.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 92%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/filesystem.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 94%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/filesystem-disk-unix.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[ 97%] Building CXX object CMakeFiles/capnp-vendored.dir/src/kj/parse/char.c++.o
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+[100%] Linking CXX static library libcapnp-vendored.a
+[100%] Built target capnp-vendored
+building 'capnp.lib.capnp' extension
+clang++ -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fPIC -fPIC -I/tmp/capnp-speed/toolchain/vendor/capnproto/src -I. -I/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/include -I/home/batman/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/include/python3.12 -c capnp/helpers/exception.cpp -o build/temp.linux-x86_64-cpython-312/capnp/helpers/exception.o -std=c++17 -pthread -O3 -flto=thin -fuse-ld=lld -fprofile-instr-generate=/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang-pgo-thinlto-profiles/training.profraw
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+clang++ -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fPIC -fPIC -I/tmp/capnp-speed/toolchain/vendor/capnproto/src -I. -I/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/include -I/home/batman/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/include/python3.12 -c capnp/lib/capnp.cpp -o build/temp.linux-x86_64-cpython-312/capnp/lib/capnp.o -std=c++17 -pthread -O3 -flto=thin -fuse-ld=lld -fprofile-instr-generate=/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang-pgo-thinlto-profiles/training.profraw
+clang++: warning: argument unused during compilation: '-fuse-ld=lld' [-Wunused-command-line-argument]
+capnp/lib/capnp.cpp:23866:13: warning: code will never be executed [-Wunreachable-code]
+ 23866 |         if (__pyx_t_6) {
+       |             ^~~~~~~~~
+capnp/lib/capnp.cpp:33493:248: warning: moving a temporary object prevents copy elision [-Wpessimizing-move]
+ 33493 |   __pyx_t_2 = ((struct __pyx_vtabstruct_5capnp_3lib_5capnp__DynamicStructReader *)((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructReader *)__pyx_t_1)->__pyx_vtab)->_init(((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructReader *)__pyx_t_1), __PYX_STD_MOVE_IF_SUPPORTED((( ::capnp::DynamicStruct::Reader)__pyx_t_4)), ((PyObject *)__pyx_v_self), NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1085, __pyx_L1_error)
+       |                                                                                                                                                                                                                                                        ^
+capnp/lib/capnp.cpp:3541:42: note: expanded from macro '__PYX_STD_MOVE_IF_SUPPORTED'
+ 3541 |   #define __PYX_STD_MOVE_IF_SUPPORTED(x) std::move(x)
+      |                                          ^
+capnp/lib/capnp.cpp:35070:248: warning: moving a temporary object prevents copy elision [-Wpessimizing-move]
+ 35070 |   __pyx_t_2 = ((struct __pyx_vtabstruct_5capnp_3lib_5capnp__DynamicStructReader *)((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructReader *)__pyx_t_1)->__pyx_vtab)->_init(((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructReader *)__pyx_t_1), __PYX_STD_MOVE_IF_SUPPORTED((( ::capnp::DynamicStruct::Reader)__pyx_t_5)), ((PyObject *)__pyx_v_self), NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1151, __pyx_L1_error)
+       |                                                                                                                                                                                                                                                        ^
+capnp/lib/capnp.cpp:3541:42: note: expanded from macro '__PYX_STD_MOVE_IF_SUPPORTED'
+ 3541 |   #define __PYX_STD_MOVE_IF_SUPPORTED(x) std::move(x)
+      |                                          ^
+capnp/lib/capnp.cpp:43186:251: warning: moving a temporary object prevents copy elision [-Wpessimizing-move]
+ 43186 |   __pyx_t_2 = ((struct __pyx_vtabstruct_5capnp_3lib_5capnp__DynamicStructBuilder *)((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructBuilder *)__pyx_t_1)->__pyx_vtab)->_init(((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructBuilder *)__pyx_t_1), __PYX_STD_MOVE_IF_SUPPORTED((( ::capnp::DynamicStruct::Builder)__pyx_t_8)), ((PyObject *)__pyx_v_self), &__pyx_t_9); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1536, __pyx_L1_error)
+       |                                                                                                                                                                                                                                                           ^
+capnp/lib/capnp.cpp:3541:42: note: expanded from macro '__PYX_STD_MOVE_IF_SUPPORTED'
+ 3541 |   #define __PYX_STD_MOVE_IF_SUPPORTED(x) std::move(x)
+      |                                          ^
+capnp/lib/capnp.cpp:44484:248: warning: moving a temporary object prevents copy elision [-Wpessimizing-move]
+ 44484 |   __pyx_t_2 = ((struct __pyx_vtabstruct_5capnp_3lib_5capnp__DynamicStructReader *)((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructReader *)__pyx_t_1)->__pyx_vtab)->_init(((struct __pyx_obj_5capnp_3lib_5capnp__DynamicStructReader *)__pyx_t_1), __PYX_STD_MOVE_IF_SUPPORTED((( ::capnp::DynamicStruct::Reader)__pyx_t_8)), ((PyObject *)__pyx_v_self), NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1606, __pyx_L1_error)
+       |                                                                                                                                                                                                                                                        ^
+capnp/lib/capnp.cpp:3541:42: note: expanded from macro '__PYX_STD_MOVE_IF_SUPPORTED'
+ 3541 |   #define __PYX_STD_MOVE_IF_SUPPORTED(x) std::move(x)
+      |                                          ^
+5 warnings generated.
+clang++ -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fPIC -pthread -shared -Wl,--exclude-libs,ALL -LModules/_hacl build/temp.linux-x86_64-cpython-312/capnp/helpers/exception.o build/temp.linux-x86_64-cpython-312/capnp/lib/capnp.o /tmp/capnp-speed/toolchain/build/temp.linux-x86_64-cpython-312/capnproto/libcapnp-vendored.a -L/home/batman/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib -o /tmp/capnp-speed/toolchain/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so -pthread -O3 -flto=thin -fuse-ld=lld -fprofile-instr-generate=/tmp/capnp-speed/toolchain/experiments/toolchain/results/clang-pgo-thinlto-profiles/training.profraw

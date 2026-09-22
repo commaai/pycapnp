@@ -1,0 +1,15 @@
+Python 3.12.13 | capnp 2.2.4 | /tmp/capnp-speed/toolchain/capnp/__init__.py
+sha256=836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde bytes=693448
+{'initData': 2, 'narrowRoadEncodeIdx': 22, 'carControl': 76, 'can': 54, 'controlsState': 75, 'wideRoadEncodeIdx': 20, 'gyroscope': 59, 'uiDebug': 46, 'radarTracks': 12, 'selfdriveState': 78, 'sendcan': 101, 'ubloxRaw': 17, 'carState': 75, 'cabinCameraState': 19, 'pandaStates': 12, 'drivingModelData': 10, 'carOutput': 50, 'deviceState': 2, 'accelerometer': 67, 'gpsLocationExternal': 7, 'wideRoadCameraState': 13, 'qNarrowRoadEncodeIdx': 13, 'cabinEncodeIdx': 15, 'longitudinalPlan': 13, 'radarState': 15, 'narrowRoadCameraState': 17, 'driverMonitoringState': 11, 'driverAssistance': 18, 'soundPressure': 12, 'modelV2': 13, 'deviceMotion': 18, 'cameraOdometry': 16, 'driverStateV2': 13, 'procLog': 3, 'vehicleParameters': 13, 'logMessage': 3, 'operatingSystemLog': 2, 'temperatureSensor': 2, 'ubloxGnss': 13, 'peripheralState': 5, 'managerState': 4, 'lateralDelay': 3, 'lateralTorqueParameters': 4, 'sentinel': 1, 'extrinsicsCalibration': 1, 'onroadEvents': 1, 'clocks': 1, 'carParams': 1, 'thumbnail': 1}
+live read                  3.93 us/item  [3.92, 4.03]  n=1049
+field write+encode        25.86 us/item  [25.54, 26.65]  n=1049
+kwargs write+encode       29.67 us/item  [28.85, 30.43]  n=1049
+payload assignment         1.27 us/item  [1.26, 1.29]  n=1049
+CAN cached read           22.67 us/item  [22.57, 23.06]  n=54
+CAN cached write          19.26 us/item  [19.16, 19.55]  n=54
+LogReader parse+scan       3.75 us/item  [3.72, 3.77]  n=1049
+dict export               64.24 us/item  [63.72, 66.19]  n=1049
+copy+encode                0.70 us/item  [0.69, 0.71]  n=1049
+reader pickle              2.96 us/item  [2.93, 3.07]  n=1049
+LogReader pickle           3.43 us/item  [3.25, 3.55]  n=1049
+schema reflection        304.43 us/item  [303.12, 316.25]  n=1

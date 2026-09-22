@@ -1,0 +1,3 @@
+results/*.so
+results/*-profiles/
+results/*.profiles.txt

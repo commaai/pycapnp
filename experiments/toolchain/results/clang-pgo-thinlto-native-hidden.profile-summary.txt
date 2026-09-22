@@ -1,0 +1,4 @@
+Instrumentation level: Front-end
+Total functions: 17037
+Maximum function count: 265487237
+Maximum internal block count: 44273831
