@@ -671,6 +671,11 @@ cdef _fill_native_struct(DynamicStruct_Builder msg, dict values, parent, unsigne
         Py_LeaveRecursiveCall()
 
 
+cdef extern from "capnp/helpers/conversion.h" namespace "pycapnp_conversion":
+    object primitiveList(C_DynamicList.Reader) except +reraise_kj_exception
+
+cdef bint _use_primitive_lists = _os.environ.get("CAPNP_PRIMITIVE_LISTS", "1") != "0"
+
 cdef bint _use_conversion_plans = _os.environ.get("CAPNP_DICT_PLANS", "1") != "0"
 
 
@@ -727,6 +732,10 @@ cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose, plans, unsigned i
             return _struct_to_dict(value.asStruct(), verbose, plans, depth)
         if kind == capnp.TYPE_LIST:
             values = value.asList()
+            if _use_primitive_lists:
+                converted = primitiveList(values)
+                if converted is not None:
+                    return converted
             return [_value_to_dict(values[i], verbose, plans, depth + 1) for i in range(values.size())]
         if kind == capnp.TYPE_ENUM:
             return <char*>helpers.fixMaybe(value.asEnum().getEnumerant()).getProto().getName().cStr()
