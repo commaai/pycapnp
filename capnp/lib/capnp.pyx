@@ -12,7 +12,6 @@ from capnp.helpers.helpers cimport init_capnp_api
 
 from builtins import memoryview as BuiltinsMemoryview
 from cpython cimport Py_buffer, PyObject_CheckBuffer
-from cpython.ref cimport PyObject, Py_DECREF
 from cpython.buffer cimport PyBUF_SIMPLE, PyBUF_CONTIG_RO
 from cpython.exc cimport PyErr_Clear
 from cython.operator cimport dereference as deref
@@ -2019,25 +2018,13 @@ def _init_capnp_api():
 # preserving normal Python descriptor lookup and the subclass slot behavior.
 cdef extern from "capnp/helpers/fastattr.h":
     ctypedef object (*CapnpGetAttr)(object, object)
-    CapnpGetAttr installCapnpGetAttr(object, CapnpGetAttr)
+    void installCapnpReaderGetAttr(object, CapnpGetAttr)
+    void installCapnpBuilderGetAttr(object, CapnpGetAttr)
     bint supportsCapnpFastGetAttr()
-    PyObject* optionalCapnpGetAttr(object, object) except? NULL
-
-cdef CapnpGetAttr _original_reader_getattr
-cdef CapnpGetAttr _original_builder_getattr
 
 
 cdef object _reader_getattr(object obj, object name):
-    cdef PyObject* result
-    cdef _DynamicStructReader reader
-    if type(obj) is not _DynamicStructReader:
-        return _original_reader_getattr(obj, name)
-    result = optionalCapnpGetAttr(obj, name)
-    if result != NULL:
-        value = <object>result
-        Py_DECREF(<object>result)
-        return value
-    reader = obj
+    cdef _DynamicStructReader reader = obj
     try:
         return to_python_reader(reader.thisptr.get(name), reader)
     except KjException as e:
@@ -2045,16 +2032,7 @@ cdef object _reader_getattr(object obj, object name):
 
 
 cdef object _builder_getattr(object obj, object name):
-    cdef PyObject* result
-    cdef _DynamicStructBuilder builder
-    if type(obj) is not _DynamicStructBuilder:
-        return _original_builder_getattr(obj, name)
-    result = optionalCapnpGetAttr(obj, name)
-    if result != NULL:
-        value = <object>result
-        Py_DECREF(<object>result)
-        return value
-    builder = obj
+    cdef _DynamicStructBuilder builder = obj
     try:
         return to_python_builder(builder.thisptr.get(name), builder._parent)
     except KjException as e:
@@ -2062,5 +2040,5 @@ cdef object _builder_getattr(object obj, object name):
 
 
 if supportsCapnpFastGetAttr() and _os.environ.get("CAPNP_FAST_GETATTR", "1") != "0":
-    _original_reader_getattr = installCapnpGetAttr(_DynamicStructReader, _reader_getattr)
-    _original_builder_getattr = installCapnpGetAttr(_DynamicStructBuilder, _builder_getattr)
+    installCapnpReaderGetAttr(_DynamicStructReader, _reader_getattr)
+    installCapnpBuilderGetAttr(_DynamicStructBuilder, _builder_getattr)

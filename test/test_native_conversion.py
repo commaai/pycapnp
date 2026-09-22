@@ -226,3 +226,21 @@ def test_primitive_import_error_and_partial_write(schema, field, values):
             items[i] = value
     assert str(fast.value).split("\nstack:")[0] == str(slow.value).split("\nstack:")[0]
     assert list(getattr(msg, field)) == list(items)
+
+
+@pytest.mark.parametrize("base", [capnp._DynamicStructReader, capnp._DynamicStructBuilder])
+def test_subclass_descriptor_failure_runs_once(base):
+    calls = []
+
+    class Child(base):
+        @property
+        def missing(self):
+            calls.append("descriptor")
+            raise AttributeError("descriptor miss")
+
+        def __getattr__(self, name):
+            calls.append("fallback")
+            return name
+
+    assert Child().missing == "missing"
+    assert calls == ["descriptor", "fallback"]
