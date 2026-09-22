@@ -683,12 +683,13 @@ cdef class _ConversionPlan:
     cdef C_StructSchema schema
     cdef vector[C_StructSchema.Field] fields
     cdef list names
-    cdef dict by_name
+    cdef dict by_name, union_values
 
     cdef _init(self, C_StructSchema schema):
         self.schema = schema
         self.names = []
         self.by_name = {}
+        self.union_values = {}
         cdef C_StructSchema.FieldSubset fields = schema.getNonUnionFields()
         cdef uint i
         for i in range(fields.size()):
@@ -714,6 +715,38 @@ cdef _conversion_cache(C_StructSchema schema):
                 return parser._conversion_plans
     # Other parsers and unregistered group schemas get operation-local plans.
     return {}
+
+
+cdef bint _use_union_cache = _os.environ.get("CAPNP_UNION_CACHE", "0") == "1"
+cdef _ConversionPlan _last_union_plan = None
+cdef object _last_union_parser = None
+
+
+cdef _DynamicEnumField _union_value(C_StructSchema schema, C_StructSchema.Field field):
+    global _last_union_plan, _last_union_parser
+    cdef _ConversionPlan plan
+    if _use_union_cache:
+        if _last_union_plan is not None and _last_union_plan.schema == schema:
+            plan = _last_union_plan
+        else:
+            plans = _conversion_cache(schema)
+            if _global_schema_parser is not None and plans is (<SchemaParser>_global_schema_parser)._conversion_plans:
+                key = schema.hashCode()
+                plan = plans.get(key)
+                if plan is None or not (plan.schema == schema):
+                    plan = _ConversionPlan()._init(schema)
+                    plans[key] = plan
+                _last_union_plan = plan
+                _last_union_parser = _global_schema_parser
+            else:
+                return (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(field)
+        key = field.getIndex()
+        value = plan.union_values.get(key)
+        if value is None:
+            value = (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(field)
+            plan.union_values[key] = value
+        return value
+    return (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(field)
 
 
 cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose, plans, unsigned int depth=0):
@@ -951,8 +984,7 @@ cdef class _DynamicStructReader:
         :Raises: :exc:`KjException` if this struct doesn't contain a union
         """
         try:
-            which = (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(
-                helpers.fixMaybe(self.thisptr.which()))
+            which = _union_value(self.thisptr.getSchema(), helpers.fixMaybe(self.thisptr.which()))
         except RuntimeError as e:
             if str(e) == "Member was null.":
                 raise KjException("Attempted to call which on a non-union type")
@@ -1126,8 +1158,7 @@ cdef class _DynamicStructBuilder:
         :Raises: :exc:`KjException` if this struct doesn't contain a union
         """
         try:
-            which = (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(
-                helpers.fixMaybe(self.thisptr.which()))
+            which = _union_value(self.thisptr.getSchema(), helpers.fixMaybe(self.thisptr.which()))
         except RuntimeError as e:
             if str(e) == "Member was null.":
                 raise KjException("Attempted to call which on a non-union type")
