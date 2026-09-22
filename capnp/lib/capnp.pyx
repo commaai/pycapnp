@@ -18,6 +18,7 @@ from cython.operator cimport dereference as deref
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 from libcpp.utility cimport move
+from libcpp.vector cimport vector
 
 
 import contextlib
@@ -164,6 +165,8 @@ ctypedef fused _DynamicSetterClasses:
 
 
 cdef extern from "Python.h":
+    int Py_EnterRecursiveCall(const char*) except -1
+    void Py_LeaveRecursiveCall()
     cdef int PyObject_GetBuffer(object, Py_buffer *view, int flags)
     cdef void PyBuffer_Release(Py_buffer *view)
 
@@ -452,35 +455,36 @@ cdef _setBaseString(_DynamicSetterClasses thisptr, field, value):
     thisptr.set(field, temp)
 
 
-cdef _setBytesField(DynamicStruct_Builder thisptr, _StructSchemaField field, value):
+cdef _setBytesField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value):
     cdef capnp.StringPtr temp_string = capnp.StringPtr(<char*>value, len(value))
     cdef C_DynamicValue.Reader temp = C_DynamicValue.Reader(temp_string)
-    thisptr.setByField(field.thisptr, temp)
+    thisptr.setByField(field, temp)
 
-cdef _setMemoryviewField(DynamicStruct_Builder thisptr, _StructSchemaField field, value):
+cdef _setMemoryviewField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value):
     cdef Py_buffer buf
     cdef capnp.StringPtr temp_string
     cdef C_DynamicValue.Reader temp
     if PyObject_GetBuffer(value, &buf, PyBUF_CONTIG_RO) != 0:
         raise KjException(
-            "cannot get buffer from memory view, for field '{}'".format(field)
+            "cannot get buffer from memory view, for field '{}'".format(<char*>field.getProto().getName().cStr())
         )
     try:
         temp_string = capnp.StringPtr(<char *>buf.buf, buf.len)
         temp = C_DynamicValue.Reader(temp_string)
-        thisptr.setByField(field.thisptr, temp)
+        thisptr.setByField(field, temp)
     finally:
         PyBuffer_Release(&buf)
 
-cdef _setBaseStringField(DynamicStruct_Builder thisptr, _StructSchemaField field, value):
+cdef _setBaseStringField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value):
     encoded_value = value.encode('utf-8')
     cdef capnp.StringPtr temp_string = capnp.StringPtr(<char*>encoded_value, len(encoded_value))
     cdef C_DynamicValue.Reader temp = C_DynamicValue.Reader(temp_string)
-    thisptr.setByField(field.thisptr, temp)
+    thisptr.setByField(field, temp)
 
 
-cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent):
+cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent, unsigned int depth=0):
     cdef C_DynamicValue.Reader temp
+    cdef C_DynamicValue.Builder ptr
     value_type = type(value)
 
     if value_type is int or value_type is long:
@@ -503,21 +507,17 @@ cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent):
         _setBaseString(thisptr, field, value)
     elif value_type is list:
         ptr = thisptr.init(field, len(value))
-        builder = to_python_builder(ptr, parent)
-        _from_list(builder, value)
+        _fill_native_list(ptr.asList(), value, parent, depth + 1)
     elif value_type is tuple:
         ptr = thisptr.init(field, len(value))
-        builder = to_python_builder(ptr, parent)
-        _from_tuple(builder, value)
+        _fill_native_list(ptr.asList(), value, parent, depth + 1)
     elif value_type is dict:
         if _DynamicSetterClasses is DynamicStruct_Builder:
             ptr = thisptr.get(field)
-            builder = to_python_builder(ptr, parent)
-            builder.from_dict(value)
+            _fill_native_struct(ptr.asStruct(), value, parent, depth + 1)
         else:
             ptr = thisptr[field]
-            builder = to_python_builder(ptr, parent)
-            builder.from_dict(value)
+            _fill_native_struct(ptr.asStruct(), value, parent, depth + 1)
     elif value is None:
         temp = C_DynamicValue.Reader(VOID)
         thisptr.set(field, temp)
@@ -537,8 +537,9 @@ cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent):
             .format(field, str(value), str(type(value))))
 
 
-cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField field, value, parent):
+cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value, parent, unsigned int depth=0):
     cdef C_DynamicValue.Reader temp
+    cdef C_DynamicValue.Builder ptr
     value_type = type(value)
 
     if value_type is int or value_type is long:
@@ -546,71 +547,157 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField
             temp = C_DynamicValue.Reader(<long long>value)
         else:
             temp = C_DynamicValue.Reader(<unsigned long long>value)
-        thisptr.setByField(field.thisptr, temp)
+        thisptr.setByField(field, temp)
     elif value_type is float:
         temp = C_DynamicValue.Reader(<double>value)
-        thisptr.setByField(field.thisptr, temp)
+        thisptr.setByField(field, temp)
     elif value_type is bool:
         temp = C_DynamicValue.Reader(<cbool>value)
-        thisptr.setByField(field.thisptr, temp)
+        thisptr.setByField(field, temp)
     elif value_type is bytes:
         _setBytesField(thisptr, field, value)
     elif isinstance(value, BuiltinsMemoryview):
         _setMemoryviewField(thisptr, field, value)
     elif isinstance(value, basestring):
         _setBaseStringField(thisptr, field, value)
-    elif value_type is list:
-        ptr = thisptr.init(field.proto.name, len(value))
-        builder = to_python_builder(ptr, parent)
-        _from_list(builder, value)
+    elif value_type is list or value_type is tuple:
+        ptr = thisptr.initByField(field, len(value))
+        _fill_native_list(ptr.asList(), value, parent, depth + 1)
     elif value_type is dict:
-        ptr = thisptr.getByField(field.thisptr)
-        builder = to_python_builder(ptr, parent)
-        builder.from_dict(value)
+        ptr = thisptr.getByField(field)
+        _fill_native_struct(ptr.asStruct(), value, parent, depth + 1)
     elif value is None:
         temp = C_DynamicValue.Reader(VOID)
-        thisptr.setByField(field.thisptr, temp)
+        thisptr.setByField(field, temp)
     elif value_type is _DynamicStructBuilder:
-        thisptr.setByField(field.thisptr, _extract_dynamic_struct_builder(value))
+        thisptr.setByField(field, _extract_dynamic_struct_builder(value))
     elif value_type is _DynamicStructReader:
-        thisptr.setByField(field.thisptr, _extract_dynamic_struct_reader(value))
+        thisptr.setByField(field, _extract_dynamic_struct_reader(value))
     elif value_type is _DynamicListBuilder:
-        thisptr.setByField(field.thisptr, _extract_dynamic_list_builder(value))
+        thisptr.setByField(field, _extract_dynamic_list_builder(value))
     elif value_type is _DynamicListReader:
-        thisptr.setByField(field.thisptr, _extract_dynamic_list_reader(value))
+        thisptr.setByField(field, _extract_dynamic_list_reader(value))
     elif value_type is _DynamicEnum:
-        thisptr.setByField(field.thisptr, _extract_dynamic_enum(value))
+        thisptr.setByField(field, _extract_dynamic_enum(value))
     else:
         raise KjException(
             "Tried to set field: '{}' with a value of: '{}' which is an unsupported type: '{}'"
-            .format(field, str(value), str(type(value))))
+            .format(<char*>field.getProto().getName().cStr(), str(value), str(type(value))))
 
 
-cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose):
+cdef _fill_native_list(C_DynamicList.Builder msg, values, parent, unsigned int depth=0):
+    cdef uint i
+    if depth >= 512:
+        raise RecursionError("capnp conversion exceeds 512 nested containers")
+    Py_EnterRecursiveCall(" while converting a capnp message")
+    try:
+        for i in range(len(values)):
+            _setDynamicField(msg, i, values[i], parent, depth)
+    finally:
+        Py_LeaveRecursiveCall()
+
+cdef _fill_native_struct(DynamicStruct_Builder msg, dict values, parent, unsigned int depth=0):
+    cdef C_StructSchema.Field field
+    if depth >= 512:
+        raise RecursionError("capnp conversion exceeds 512 nested containers")
+    Py_EnterRecursiveCall(" while converting a capnp message")
+    try:
+        for key, value in values.iteritems():
+            if key == 'which':
+                continue
+            field = msg.getSchema().getFieldByName(key)
+            if isinstance(value, str) and field.getType().isData():
+                value = base64.b64decode(value)
+            try:
+                _setDynamicFieldWithField(msg, field, value, parent, depth)
+            except Exception as e:
+                if 'expected isSetInUnion(field)' in str(e):
+                    msg.initByField(field)
+                    _setDynamicFieldWithField(msg, field, value, parent, depth)
+                else:
+                    raise
+    finally:
+        Py_LeaveRecursiveCall()
+
+cdef bint _use_conversion_plans = _os.environ.get("CAPNP_DICT_PLANS", "1") != "0"
+
+
+cdef class _ConversionPlan:
+    cdef C_StructSchema schema
+    cdef vector[C_StructSchema.Field] fields
+    cdef list names
+
+    cdef _init(self, C_StructSchema schema):
+        self.schema = schema
+        self.names = []
+        cdef C_StructSchema.FieldSubset fields = schema.getNonUnionFields()
+        cdef uint i
+        for i in range(fields.size()):
+            self.fields.push_back(fields[i])
+            self.names.append(<char*>fields[i].getProto().getName().cStr())
+        return self
+
+
+cdef _conversion_cache(C_StructSchema schema):
+    cdef SchemaParser parser
+    cdef _StructSchema known_schema
+    if not _use_conversion_plans:
+        return None
+    if _global_schema_parser is not None:
+        parser = _global_schema_parser
+        module = parser.modules_by_id.get(schema.getProto().getId())
+        if module is not None and isinstance(getattr(module, 'schema', None), _StructSchema):
+            known_schema = module.schema
+            if schema == known_schema.thisptr_child:
+                return parser._conversion_plans
+    # Other parsers and unregistered group schemas get operation-local plans.
+    return {}
+
+
+cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose, plans, unsigned int depth=0):
     cdef int kind = value.getType()
     cdef C_DynamicList.Reader values
     cdef uint i
-    if kind == capnp.TYPE_STRUCT:
-        return _struct_to_dict(value.asStruct(), verbose)
-    if kind == capnp.TYPE_LIST:
-        values = value.asList()
-        return [_value_to_dict(values[i], verbose) for i in range(values.size())]
-    if kind == capnp.TYPE_ENUM:
-        return <char*>helpers.fixMaybe(value.asEnum().getEnumerant()).getProto().getName().cStr()
-    return to_python_reader(value, None)
+    if depth >= 512:
+        raise RecursionError("capnp conversion exceeds 512 nested containers")
+    Py_EnterRecursiveCall(" while converting a capnp message")
+    try:
+        if kind == capnp.TYPE_STRUCT:
+            return _struct_to_dict(value.asStruct(), verbose, plans, depth)
+        if kind == capnp.TYPE_LIST:
+            values = value.asList()
+            return [_value_to_dict(values[i], verbose, plans, depth + 1) for i in range(values.size())]
+        if kind == capnp.TYPE_ENUM:
+            return <char*>helpers.fixMaybe(value.asEnum().getEnumerant()).getProto().getName().cStr()
+        return to_python_reader(value, None)
+    finally:
+        Py_LeaveRecursiveCall()
 
-
-cdef _struct_to_dict(C_DynamicStruct.Reader msg, bint verbose):
+cdef _struct_to_dict(C_DynamicStruct.Reader msg, bint verbose, plans, unsigned int depth=0):
     cdef C_StructSchema.Field field
-    cdef C_StructSchema.FieldSubset fields = msg.getSchema().getNonUnionFields()
+    cdef C_StructSchema schema = msg.getSchema()
+    cdef C_StructSchema.FieldSubset fields
+    cdef _ConversionPlan plan
     cdef uint i
     cdef dict result = {}
     if helpers.tryWhich(msg, &field):
-        result[<char*>field.getProto().getName().cStr()] = _value_to_dict(msg.getByField(field), verbose)
-    for i in range(fields.size()):
-        field = fields[i]
-        if verbose or msg.hasByField(field):
-            result[<char*>field.getProto().getName().cStr()] = _value_to_dict(msg.getByField(field), verbose)
+        result[<char*>field.getProto().getName().cStr()] = _value_to_dict(msg.getByField(field), verbose, plans, depth + 1)
+    if plans is not None:
+        key = schema.hashCode()
+        plan = plans.get(key)
+        if plan is None or not (plan.schema == schema):
+            plan = _ConversionPlan()._init(schema)
+            plans[key] = plan
+        for i in range(plan.fields.size()):
+            field = plan.fields[i]
+            if verbose or msg.hasByField(field):
+                result[plan.names[i]] = _value_to_dict(msg.getByField(field), verbose, plans, depth + 1)
+    else:
+        fields = schema.getNonUnionFields()
+        for i in range(fields.size()):
+            field = fields[i]
+            if verbose or msg.hasByField(field):
+                result[<char*>field.getProto().getName().cStr()] = _value_to_dict(msg.getByField(field), verbose, plans, depth + 1)
     return result
 
 
@@ -619,15 +706,17 @@ cdef _to_dict(msg, bint verbose):
     cdef uint i
     msg_type = type(msg)
     if msg_type is _DynamicStructReader:
-        return _struct_to_dict((<_DynamicStructReader>msg).thisptr, verbose)
+        return _struct_to_dict((<_DynamicStructReader>msg).thisptr, verbose,
+                               _conversion_cache((<_DynamicStructReader>msg).thisptr.getSchema()))
     if msg_type is _DynamicStructBuilder:
-        return _struct_to_dict((<_DynamicStructBuilder>msg).thisptr.asReader(), verbose)
+        return _struct_to_dict((<_DynamicStructBuilder>msg).thisptr.asReader(), verbose,
+                               _conversion_cache((<_DynamicStructBuilder>msg).thisptr.getSchema()))
     if msg_type is _DynamicListReader:
         values = (<_DynamicListReader>msg).thisptr
-        return [_value_to_dict(values[i], verbose) for i in range(values.size())]
+        return [_value_to_dict(values[i], verbose, {}) for i in range(values.size())]
     if msg_type is _DynamicListBuilder:
         values = (<_DynamicListBuilder>msg).thisptr.asReader()
-        return [_value_to_dict(values[i], verbose) for i in range(values.size())]
+        return [_value_to_dict(values[i], verbose, {}) for i in range(values.size())]
     if isinstance(msg, (_DynamicStructBuilder, _DynamicStructReader)):
         return msg.to_dict(verbose)
     if msg_type is _DynamicEnum:
@@ -923,7 +1012,7 @@ cdef class _DynamicStructBuilder:
         _setDynamicField(self.thisptr, field, value, self._parent)
 
     cpdef _set_by_field(self, _StructSchemaField field, value):
-        _setDynamicFieldWithField(self.thisptr, field, value, self._parent)
+        _setDynamicFieldWithField(self.thisptr, field.thisptr, value, self._parent)
 
     def __setattr__(self, field, value):
         try:
@@ -1032,21 +1121,7 @@ cdef class _DynamicStructBuilder:
         return _to_dict(self, verbose)
 
     def from_dict(self, dict d):
-        for key, val in d.iteritems():
-            if key != 'which':
-                if isinstance(val, str):
-                    key_bytes = key.encode()
-                    if self.thisptr.getSchema().getFieldByName(key_bytes).getType().isData():
-                        # decode bytes from utf-8 base64 encoding
-                        val = base64.b64decode(val)
-                try:
-                    self._set(key, val)
-                except Exception as e:
-                    if 'expected isSetInUnion(field)' in str(e):
-                        self.init(key)
-                        self._set(key, val)
-                    else:
-                        raise
+        _fill_native_struct(self.thisptr, d, self._parent)
 
     property total_size:
         def __get__(self):
@@ -1363,6 +1438,7 @@ cdef class SchemaParser:
     def __cinit__(self):
         self.thisptr = new C_SchemaParser()
         self.modules_by_id = {}
+        self._conversion_plans = {}
         self._all_imports = []
 
     def __dealloc__(self):

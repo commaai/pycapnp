@@ -65,6 +65,8 @@ cdef extern from "capnp/schema.h" namespace " ::capnp":
         ListSchema asList() except +reraise_kj_exception
 
     cdef cppclass Schema nogil:
+        uint hashCode()
+        bint operator==(Schema)
         Node.Reader getProto() except +reraise_kj_exception
         StructSchema asStruct() except +reraise_kj_exception
         EnumSchema asEnum() except +reraise_kj_exception
@@ -72,6 +74,7 @@ cdef extern from "capnp/schema.h" namespace " ::capnp":
 
     cdef cppclass StructSchema(Schema) nogil:
         cppclass Field nogil:
+            uint getIndex()
             SchemaField.Reader getProto()
             SchemaType getType()
 
@@ -148,6 +151,8 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
         bint has(char *) except +reraise_kj_exception
         void set(char *, DynamicValueForward.Reader) except +reraise_kj_exception
         void setByField"set"(StructSchema.Field, DynamicValueForward.Reader) except +reraise_kj_exception
+        DynamicValueForward.Builder initByField"init"(StructSchema.Field, uint size) except +reraise_kj_exception
+        DynamicValueForward.Builder initByField"init"(StructSchema.Field) except +reraise_kj_exception
         DynamicValueForward.Builder init(char *, uint size) except +reraise_kj_exception
         DynamicValueForward.Builder init(char *) except +reraise_kj_exception
         StructSchema getSchema()
@@ -192,8 +197,8 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             bint asBool"as<bool>"()
             double asDouble"as<double>"()
             StringPtr asText"as< ::capnp::Text>"()
-            DynamicList.Reader asList"as< ::capnp::DynamicList>"()
-            DynamicStruct.Reader asStruct"as< ::capnp::DynamicStruct>"()
+            DynamicList.Reader asList"as< ::capnp::DynamicList>"() except +reraise_kj_exception
+            DynamicStruct.Reader asStruct"as< ::capnp::DynamicStruct>"() except +reraise_kj_exception
             DynamicEnum asEnum"as< ::capnp::DynamicEnum>"()
             Data.Reader asData"as< ::capnp::Data>"()
 
@@ -204,8 +209,8 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             bint asBool"as<bool>"()
             double asDouble"as<double>"()
             StringPtr asText"as< ::capnp::Text>"()
-            DynamicList.Builder asList"as< ::capnp::DynamicList>"()
-            DynamicStruct_Builder asStruct"as< ::capnp::DynamicStruct>"()
+            DynamicList.Builder asList"as< ::capnp::DynamicList>"() except +reraise_kj_exception
+            DynamicStruct_Builder asStruct"as< ::capnp::DynamicStruct>"() except +reraise_kj_exception
             DynamicEnum asEnum"as< ::capnp::DynamicEnum>"()
             Data.Builder asData"as< ::capnp::Data>"()
 
