@@ -2,14 +2,10 @@
  */
 #define PY_SSIZE_T_CLEAN
 #include "layout.h"
+#include "result.h"
 #include <Python.h>
 #include <stdint.h>
 #include <string.h>
-typedef struct {
-  uint64_t timestamp;
-  double speed, angle, wheel;
-  unsigned valid, gear;
-} Result;
 typedef struct {
   const unsigned char *p;
   size_t n;
@@ -187,7 +183,7 @@ static PyObject *values_tuple(size_t count, PyObject **items) {
   }
   return out;
 }
-static PyObject *tuple(Result r) {
+PyObject *result_tuple(Result r) {
   PyObject *items[6] = {PyLong_FromUnsignedLongLong(r.timestamp),
                         PyBool_FromLong(r.valid),
                         PyFloat_FromDouble(r.speed),
@@ -196,7 +192,7 @@ static PyObject *tuple(Result r) {
                         PyLong_FromUnsignedLong(r.gear)};
   return values_tuple(6, items);
 }
-static PyObject *one(PyObject *self, PyObject *arg) {
+PyObject *one(PyObject *self, PyObject *arg) {
   (void)self;
   if (!PyBytes_Check(arg)) {
     PyErr_SetString(PyExc_TypeError, "bytes required");
@@ -209,7 +205,7 @@ static PyObject *one(PyObject *self, PyObject *arg) {
                     "invalid or unsupported CarState message");
     return NULL;
   }
-  return tuple(r);
+  return result_tuple(r);
 }
 static PyObject *batch(PyObject *self, PyObject *arg) {
   PyObject *seq = PySequence_Fast(arg, "sequence required");
@@ -335,7 +331,7 @@ static PyObject *project_event(PyObject *self, PyObject *arg) {
     Result r;
     if (!project_car(&m, event, &r))
       goto invalid;
-    return tuple(r);
+    return result_tuple(r);
   }
   uint64_t timestamp = scalar(event, TIME_OFFSET, 8, TIME_DEFAULT);
   PyObject *valid =
@@ -449,34 +445,45 @@ static void setreal(unsigned char *p, double value, uint32_t def) {
   memcpy(&bits, &f, 4);
   store(p, bits ^ def, 4);
 }
-static PyObject *write_car(PyObject *self, PyObject *arg) {
-  (void)self;
+int parse_car(PyObject *arg, Result *result) {
   if (!PyTuple_Check(arg) || PyTuple_GET_SIZE(arg) != 6) {
     PyErr_SetString(PyExc_TypeError, "six-element projection tuple required");
-    return NULL;
+    return 0;
   }
   uint64_t timestamp = PyLong_AsUnsignedLongLong(PyTuple_GET_ITEM(arg, 0));
   if (PyErr_Occurred())
-    return NULL;
+    return 0;
   int valid = PyObject_IsTrue(PyTuple_GET_ITEM(arg, 1));
   if (valid < 0)
-    return NULL;
+    return 0;
   double speed = PyFloat_AsDouble(PyTuple_GET_ITEM(arg, 2));
   if (PyErr_Occurred())
-    return NULL;
+    return 0;
   double angle = PyFloat_AsDouble(PyTuple_GET_ITEM(arg, 3));
   if (PyErr_Occurred())
-    return NULL;
+    return 0;
   double wheel = PyFloat_AsDouble(PyTuple_GET_ITEM(arg, 4));
   if (PyErr_Occurred())
-    return NULL;
+    return 0;
   unsigned long gear = PyLong_AsUnsignedLong(PyTuple_GET_ITEM(arg, 5));
   if (PyErr_Occurred())
-    return NULL;
+    return 0;
   if (gear > 65535) {
     PyErr_SetString(PyExc_OverflowError, "enum does not fit uint16");
-    return NULL;
+    return 0;
   }
+  *result =
+      (Result){timestamp, speed, angle, wheel, (unsigned)valid, (unsigned)gear};
+  return 1;
+}
+PyObject *write_car(PyObject *self, PyObject *arg) {
+  (void)self;
+  Result result;
+  if (!parse_car(arg, &result))
+    return NULL;
+  uint64_t timestamp = result.timestamp;
+  unsigned valid = result.valid, gear = result.gear;
+  double speed = result.speed, angle = result.angle, wheel = result.wheel;
   size_t event = 1, car = event + EVENT_DATA + EVENT_POINTERS,
          wheels = car + CAR_DATA + CAR_POINTERS;
   size_t words = wheels + WHEELS_DATA + WHEELS_POINTERS;
@@ -538,12 +545,10 @@ static PyObject *write_plan(PyObject *self, PyObject *arg) {
       stop = PyObject_IsTrue(PyTuple_GET_ITEM(arg, 4));
   if (valid < 0 || stop < 0)
     return NULL;
-  PyObject *speeds =
-      PySequence_Tuple(PyTuple_GET_ITEM(arg, 2));
+  PyObject *speeds = PySequence_Tuple(PyTuple_GET_ITEM(arg, 2));
   if (!speeds)
     return NULL;
-  PyObject *accels =
-      PySequence_Tuple(PyTuple_GET_ITEM(arg, 3));
+  PyObject *accels = PySequence_Tuple(PyTuple_GET_ITEM(arg, 3));
   if (!accels) {
     Py_DECREF(speeds);
     return NULL;
@@ -607,8 +612,7 @@ static PyObject *write_can(PyObject *self, PyObject *arg) {
   int valid = PyObject_IsTrue(PyTuple_GET_ITEM(arg, 1));
   if (valid < 0)
     return NULL;
-  PyObject *frames =
-      PySequence_Tuple(PyTuple_GET_ITEM(arg, 2));
+  PyObject *frames = PySequence_Tuple(PyTuple_GET_ITEM(arg, 2));
   if (!frames)
     return NULL;
   size_t count = PySequence_Fast_GET_SIZE(frames);

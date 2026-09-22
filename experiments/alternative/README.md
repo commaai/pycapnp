@@ -16,7 +16,7 @@ Native writers construct CarState, LongitudinalPlan, and CAN Events from those p
 
 The reader supports near/single-far/double-far pointers, negative offsets, missing fields, XOR defaults, primitive-list schema evolution, inline composite lists, and unknown enum values. It validates only the selected paths, just as projected library reads do. Input must be exactly one complete framed message. Bounded schema depth replaces general recursive traversal; the explicit experimental limits are one million elements per materialized list and an eight-million-word traversal budget. Writers impose similar allocation limits. These limits and unsupported event types are intentional API restrictions, not general wire compatibility claims.
 
-Approach 18 compiles these schema-specialized C constants on demand and caches the native extension by source, schema, compiler version, and CPython ABI. This is runtime compilation, **not adaptive tracing or workload-driven JIT optimization**. Its warm machine code is identical to an ahead-of-time build. `measure_startup.py` uses hyperfine to compare fresh processes with a cold compile, populated cache, and prebuilt library. Shared imports are included in all three commands, so incremental differences—not absolute minimal extension-import latency—are the useful metric.
+Approach 18 compiles these schema-specialized C constants on demand and caches the native extension by kernel/header/generator source (including compile flags), schema, compiler version, and CPython ABI. This is runtime compilation, **not adaptive tracing or workload-driven JIT optimization**. Its warm machine code is identical to an ahead-of-time build. `measure_startup.py` uses hyperfine to compare fresh processes with a cold compile, populated cache, and prebuilt library. Shared imports are included in all three commands, so incremental differences—not absolute minimal extension-import latency—are the useful metric.
 
 Approach 19 compares the *same CarState C kernel* through direct CPython, ctypes PyDLL, CFFI ABI, compiled CFFI API, and a compiled pybind11 extension. There are matched direct CPython/pybind11 native-batch variants, and ctypes/CFFI batch-local output-buffer reuse variants. All produce the same list of six-element tuples. CFFI/ctypes still extract native struct members through Python; pybind11 constructs the tuple natively. No Rust/PyO3, nanobind, or other unimplemented framework is represented by these results.
 
@@ -30,8 +30,8 @@ export PYTHONPATH="/tmp/capnp-speed-pybind-deps:/path/to/built/pycapnp:/home/bat
 PYTHON=/home/batman/openpilot/.venv/bin/python
 
 taskset -c 20 "$PYTHON" experiments/alternative/run.py /tmp/pr3704_logs/1.rlog.zst > experiments/alternative/results.json
-# Repeat on a second local route segment; preserve the first result.
-taskset -c 20 "$PYTHON" experiments/alternative/run.py /tmp/pr3704_logs/0.rlog.zst > experiments/alternative/results-second.json
+# Held-out route uses a different car; preserve the first result.
+taskset -c 20 "$PYTHON" experiments/alternative/run.py /tmp/opendbc_logs/ascent_1.rlog.zst > experiments/alternative/results-second.json
 taskset -c 20 "$PYTHON" experiments/alternative/measure_startup.py
 "$PYTHON" experiments/alternative/test_wire.py
 "$PYTHON" experiments/alternative/test_adversarial.py
@@ -45,7 +45,7 @@ taskset -c 20 "$PYTHON" experiments/alternative/measure_startup.py
 
 `run.py` uses the first 1,000 available messages per supported event type, rather than service-frequency weighting. It serializes the corpus outside timing, checks output equality, calibrates each case, then rotates timing order across five samples. Results include complete output allocation/destruction, including the Python result list. Raw samples are microseconds per Event (CAN per batch, not per frame). Corpus hashes are recorded per type. Compilation is reported separately.
 
-The native constructors receive tuples; the idiomatic reference constructs nested kwargs/dictionaries inside the timed call. Thus writer speedups measure fused construction plus encoding, **not wire encoding alone**. Read speedups remove dynamic wrappers, lookup, and Python consumer loops as well as the C++ reader. Without an equivalent typed C++ projection benchmark, these ratios do not isolate the value of bypassing libcapnp.
+The native constructors receive tuples; the idiomatic reference constructs nested kwargs/dictionaries inside the timed call. Thus writer speedups measure fused construction plus encoding, **not wire encoding alone**. Read speedups remove dynamic wrappers, lookup, and Python consumer loops as well as the C++ reader. The separately reported `control.py` comparison below isolates the smaller backend effect with shared Python conversion code.
 
 Results from a shared development host are provisional, especially small binding-framework differences. Root-level quiet reruns should precede recommendations. These experiments cannot support a whole-openpilot speedup estimate or a claim that every possible implementation has been exhausted.
 
@@ -66,6 +66,23 @@ Specialized CarState/plan/CAN construction medians are 0.060/0.253/0.973 µs, ve
 For the identical CarState C kernel, single-event direct CPython/pybind11/CFFI API/ctypes PyDLL cost 0.112/0.187/0.573/0.667 µs. Matched native CPython and pybind11 batches cost 0.092 and 0.087 µs/event; this small difference is inconclusive on the shared host. Batch-local buffer reuse reduces CFFI API and ctypes to 0.383 and 0.522 µs/event. The experiment supports batching and direct Python result construction, not a general binding-framework ranking.
 
 See `results.json` and `startup.json` for all samples. Existing benchmark code remains unchanged at 100 lines.
+
+## Typed libcapnp backend control
+
+`control.py` links `library_control.cpp` against the vendored static library and compares the same CarState tuple through both backends. The control uses typed internal `StructReader`/`StructBuilder` primitives, schema-derived offsets, borrowed bytes, and **the same compiled C Python input/result conversion functions** as the direct codec. It avoids generated Python wrappers or ownership allocations. The optimized writer uses `FlatMessageBuilder` directly over the final Python bytes buffer, with the same advance size knowledge as the direct writer. A separate malloc+serialize variant exposes allocation/copy overhead.
+
+```sh
+taskset -c 20 "$PYTHON" experiments/alternative/control.py /tmp/pr3704_logs/1.rlog.zst \
+  --archive /path/to/pycapnp/build/temp.linux-x86_64-cpython-312/capnproto/libcapnp-vendored.a \
+  > experiments/alternative/control-results.json
+"$PYTHON" experiments/alternative/test_layout.py
+```
+
+All 1,000 real projections match and all three writers produce byte-identical messages. Provisional medians: direct read 0.111 µs, typed-library read 0.128 µs; direct write 0.068 µs, typed flat-library write 0.104 µs, typed malloc-library write 0.162 µs. Thus most of the large dynamic-reference speedups come from specialization and eliminating Python work. Bypassing the library adds a much smaller benefit in this scalar/nested case. These controls do not establish list-heavy backend performance.
+
+Malformed acceptance is deliberately not claimed identical: over 10,000 mutations the direct implementation never accepted an input rejected by libcapnp, but rejected 312 inputs libcapnp accepted. For example, libcapnp clamps an out-of-range near pointer to segment end and accepts an empty struct there; the direct implementation rejects the out-of-range offset. This stricter behavior is an experimental compatibility restriction, and the test records its frequency rather than hiding it.
+
+Schema specialization now rejects unsupported scalar/list types, non-null or explicit pointer defaults, nested union membership, and Event payloads that do not share the expected union pointer slot. `test_layout.py` exercises those rejection paths. Its cache hashes the included shared header and generator/compile flags as well as the C source. The library-control binary always rebuilds and is not cached.
 
 ## Independent review and fixes
 

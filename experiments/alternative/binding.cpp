@@ -1,12 +1,9 @@
+#include "result.h"
 #include <pybind11/pybind11.h>
 #include <stdint.h>
 namespace py = pybind11;
 extern "C" {
-struct Result {
-  uint64_t timestamp;
-  double speed, angle, wheel;
-  unsigned valid, gear;
-};
+
 int project(const unsigned char *, size_t, Result *);
 }
 static py::tuple one(py::bytes data) {

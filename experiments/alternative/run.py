@@ -20,9 +20,41 @@ from openpilot.tools.lib.logreader import LogReader
 ROOT = Path(__file__).resolve().parent
 
 
-def layout():
-    event = log.Event.schema
+def require_field(schema, name, kind, element=None, allow_union=False):
+    field = schema.fields[name].proto
+    if not allow_union and field.discriminantValue != 65535:
+        raise ValueError(f"unsupported union field: {name}")
+    slot = field.slot
+    if slot.type.which() != kind or slot.defaultValue.which() != kind:
+        raise ValueError(f"unsupported type for {name}: expected {kind}")
+    if kind in ("struct", "list", "data") and (slot.hadExplicitDefault or slot.defaultValue._has(kind)):
+        raise ValueError(f"unsupported pointer default for {name}")
+    if element is not None and slot.type.list.elementType.which() != element:
+        raise ValueError(f"unsupported list element for {name}: expected {element}")
+
+
+def layout(event_schema=None):
+    event = log.Event.schema if event_schema is None else event_schema
+    for field, kind, element in [
+        ("carState", "struct", None),
+        ("carControl", "struct", None),
+        ("modelV2", "struct", None),
+        ("longitudinalPlan", "struct", None),
+        ("can", "list", "struct"),
+    ]:
+        require_field(event, field, kind, element, allow_union=True)
+        if event.fields[field].proto.slot.offset != event.fields["carState"].proto.slot.offset:
+            raise ValueError("selected Event payloads must share the same union pointer slot")
+        if event.fields[field].proto.discriminantValue == 65535:
+            raise ValueError("selected Event payloads must be union members")
+    require_field(event, "logMonoTime", "uint64")
+    require_field(event, "valid", "bool")
     car = event.fields["carState"].schema
+    require_field(car, "vEgo", "float32")
+    require_field(car, "steeringAngleDeg", "float32")
+    require_field(car, "gearShifter", "enum")
+    require_field(car, "wheelSpeeds", "struct")
+    require_field(car.fields["wheelSpeeds"].schema, "fl", "float32")
     wheel = car.fields["wheelSpeeds"].schema
     values = {
         "DISCRIMINANT_OFFSET": event.node.struct.discriminantOffset * 2,
@@ -59,6 +91,19 @@ def layout():
     schemas["POSITION"] = schemas["MODEL"].fields["position"].schema
     schemas["LEAD"] = schemas["MODEL"].fields["leadsV3"].schema.elementType
     schemas["META"] = schemas["MODEL"].fields["meta"].schema
+    expected = {
+        "CONTROL": {"enabled": ("bool", None), "actuators": ("struct", None)},
+        "ACTUATORS": {"accel": ("float32", None), "torque": ("float32", None)},
+        "MODEL": {"position": ("struct", None), "leadsV3": ("list", "struct"), "meta": ("struct", None)},
+        "POSITION": {"x": ("list", "float32")},
+        "LEAD": {"x": ("list", "float32")},
+        "META": {"laneChangeState": ("enum", None)},
+        "PLAN": {"speeds": ("list", "float32"), "accels": ("list", "float32"), "shouldStop": ("bool", None)},
+        "CAN": {"address": ("uint32", None), "src": ("uint8", None), "dat": ("data", None)},
+    }
+    for prefix, fields in expected.items():
+        for field, (kind, element) in fields.items():
+            require_field(schemas[prefix], field, kind, element)
     selected = {
         "CONTROL": ["enabled", "actuators"],
         "ACTUATORS": ["accel", "torque"],
@@ -89,7 +134,7 @@ def layout():
 def compile_kernel(cache):
     started = time.perf_counter()
     header = layout()
-    source = (ROOT / "wire.c").read_bytes()
+    source = b"".join((ROOT / name).read_bytes() for name in ("wire.c", "result.h", "run.py"))
     # Cache includes ABI, compiler identity and exact source/schema constants.
     compiler = subprocess.check_output(["cc", "--version"])
     key = hashlib.sha256(source + header.encode() + compiler + sysconfig.get_config_var("SOABI").encode()).hexdigest()
@@ -98,7 +143,12 @@ def compile_kernel(cache):
     output = target / ("wire" + sysconfig.get_config_var("EXT_SUFFIX"))
     cold = not output.exists()
     if cold:
-        (target / "layout.h").write_text(header)
+        with tempfile.NamedTemporaryFile(mode="w", dir=target, delete=False) as stream:
+            stream.write(header)
+            header_temp = stream.name
+        os.replace(header_temp, target / "layout.h")
+        with tempfile.NamedTemporaryFile(dir=target, suffix=".so.tmp", delete=False) as stream:
+            output_temp = stream.name
         subprocess.run(
             [
                 "cc",
@@ -113,11 +163,11 @@ def compile_kernel(cache):
                 "-I" + str(target),
                 str(ROOT / "wire.c"),
                 "-o",
-                str(output) + f".{os.getpid()}.tmp",
+                output_temp,
             ],
             check=True,
         )
-        os.replace(str(output) + f".{os.getpid()}.tmp", output)
+        os.replace(output_temp, output)
     spec = importlib.util.spec_from_file_location("wire", output)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
