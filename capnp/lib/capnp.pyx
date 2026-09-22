@@ -1821,3 +1821,121 @@ def remove_import_hook():
 def _init_capnp_api():
     """ Initialize static function pointers for cdef api functions. """
     init_capnp_api()
+
+# Opt-in bulk operations. Existing message APIs keep their behavior.
+from libcpp.vector cimport vector
+from libcpp.string cimport string
+
+cdef extern from "capnp/helpers/logscan.h" namespace "pycapnp_scan":
+    cdef cppclass ScanValue "pycapnp_scan::Value":
+        int type
+        int64_t integer
+        uint64_t unsignedInteger
+        double number
+        string text
+        vector[ScanValue] values
+        vector[double] numbers
+        vector[uint64_t] unsignedNumbers
+        vector[int64_t] signedNumbers
+        vector[string] strings
+    vector[size_t] scan_boundaries "pycapnp_scan::boundaries"(const char*, size_t) except +reraise_kj_exception nogil
+    vector[vector[ScanValue]] scan_project "pycapnp_scan::project"(const char*, size_t, C_StructSchema, const string&, const vector[vector[string]]&, uint64_t, int, bint, bint) except +reraise_kj_exception nogil
+    object scan_project_python "pycapnp_scan::projectPython"(const char*, size_t, C_StructSchema, const string&, const vector[vector[string]]&, uint64_t, int, bint) except +reraise_kj_exception
+
+
+cdef bytes _scan_bytes(const string& value):
+    return value
+
+
+cdef object _scan_to_python(const ScanValue& value):
+    cdef size_t i
+    if value.type == 0: return None
+    if value.type == 1: return bool(value.unsignedInteger)
+    if value.type == 2: return value.integer
+    if value.type == 3: return value.unsignedInteger
+    if value.type == 4: return value.number
+    if value.type == 5: return (<bytes>value.text).decode('utf8')
+    if value.type == 6: return <bytes>value.text
+    if value.type == 8: return [value.numbers[i] for i in range(value.numbers.size())]
+    if value.type == 9: return [value.unsignedNumbers[i] for i in range(value.unsignedNumbers.size())]
+    if value.type == 10: return [value.signedNumbers[i] for i in range(value.signedNumbers.size())]
+    if value.type == 11: return [_scan_bytes(value.strings[i]).decode('utf8') for i in range(value.strings.size())]
+    if value.type == 12: return [_scan_bytes(value.strings[i]) for i in range(value.strings.size())]
+    if value.type == 13: return [bool(value.unsignedNumbers[i]) for i in range(value.unsignedNumbers.size())]
+    return [_scan_to_python(value.values[i]) for i in range(value.values.size())]
+
+
+def frame_offsets(bytes data):
+    """Validate framing and return byte offsets; payload validation remains lazy."""
+    cdef const char* ptr = data
+    cdef size_t size = len(data)
+    cdef vector[size_t] offsets
+    with nogil:
+        offsets = scan_boundaries(ptr, size)
+    return offsets
+
+
+def project_stream(bytes data, _StructSchema schema, union_field, paths,
+                   uint64_t traversal_limit_in_words=8388608, int nesting_limit=64,
+                   bint flat=False, bint shared=True, bint fused=False):
+    """Filter an unpacked stream and project scalar/list paths; enums return raw integers.
+
+    No readers escape the scan. Limits apply separately to each message. Unlike
+    LogReader's warning/partial-return policy, malformed accessed data raises.
+    """
+    if schema is None:
+        raise TypeError("schema must not be None")
+    if "\x00" in union_field:
+        raise ValueError("field names cannot contain NUL")
+    if nesting_limit < 0:
+        raise ValueError('nesting_limit must be nonnegative')
+    cdef C_StructSchema native_schema = schema._thisptr()
+    cdef string selected = union_field.encode('utf8')
+    cdef vector[vector[string]] names
+    cdef vector[string] name
+    for path in paths:
+        name.clear()
+        for part in path.split('.'):
+            if "\x00" in part:
+                raise ValueError("field names cannot contain NUL")
+            name.push_back(part.encode('utf8'))
+        names.push_back(name)
+    cdef const char* ptr = data
+    cdef size_t size = len(data)
+    cdef vector[vector[ScanValue]] rows
+    if fused:
+        return scan_project_python(ptr, size, native_schema, selected, names, traversal_limit_in_words, nesting_limit, shared)
+    flat = flat and names.size() > 0
+    with nogil:
+        rows = scan_project(ptr, size, native_schema, selected, names, traversal_limit_in_words, nesting_limit, flat, shared)
+    cdef size_t i, j
+    if flat:
+        return [tuple([_scan_to_python(rows[0][i * names.size() + j]) for j in range(names.size())])
+                for i in range(rows[0].size() // names.size())]
+    return [tuple([_scan_to_python(rows[i][j]) for j in range(rows[i].size())])
+            for i in range(rows.size())]
+
+
+def read_immutable_frame(data, _StructSchema schema):
+    """Own an immutable frame for the entire lifetime of any derived reader."""
+    if schema is None:
+        raise TypeError('schema must not be None')
+    if not isinstance(data, bytes) and not (
+            isinstance(data, BuiltinsMemoryview) and isinstance(data.obj, bytes)
+            and data.c_contiguous and data.itemsize == 1):
+        raise TypeError('expected bytes or a contiguous view of bytes')
+    cdef _BufferView view = _BufferView(data)
+    cdef Py_ssize_t size = view.view.len
+    if size % 8:
+        raise ValueError('input length must be a multiple of eight bytes')
+    cdef char* ptr = view.buf
+    cdef object owner = view
+    cdef _AlignedBuffer aligned
+    if (<uintptr_t>ptr) % 8:
+        aligned = _AlignedBuffer(BuiltinsMemoryview(data).tobytes())
+        owner = aligned
+        ptr = aligned.buf
+    cdef _FlatArrayMessageReaderAligned reader = _FlatArrayMessageReaderAligned()._init(owner, ptr, size)
+    if reader.msg_size != size:
+        raise ValueError('expected exactly one message')
+    return reader.get_root(schema)

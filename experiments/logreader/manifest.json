@@ -1,0 +1,12 @@
+{
+  "python": "3.12.13",
+  "files": {
+    "capnp/lib/capnp.pyx": "53d11f8cdac1788693e4bec5142464c770728a5a43bdf929722e210cc84aa8f5",
+    "capnp/helpers/logscan.h": "c33cd2744e0a13e606e99819fee7bc00d2aed770173acf83f248e057f6fb5a55",
+    "capnp/logstream.py": "e7a54ac11618ad3c6551be3483888c6e51e9d68a331f3725db639eeccd4d28aa",
+    "setup.py": "01707b1533ddc30ba3eba33f2e9603028cbe454fe2ad3032c5d2d42ce0a07a26",
+    "experiments/logreader/bench.py": "662b31b917df38f02f6b97e98361bbf46ef3bbb14ba66052d7a41e89f714b329",
+    "experiments/logreader/ablate.py": "5adb127701fb616965a4437268a51366e4ec473660e102b93db8d2df70582048",
+    "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "f88839696d3535c5759208877afa7a1f7d94c2573e14397c01b7f36034c733ac"
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "mode": "staged",
+    "query": "model",
+    "rows": 1200,
+    "base_peak_kib": 127636,
+    "peak_kib": 127636,
+    "incremental_peak_kib": 0
+  },
+  {
+    "mode": "fused",
+    "query": "model",
+    "rows": 1200,
+    "base_peak_kib": 127628,
+    "peak_kib": 127628,
+    "incremental_peak_kib": 0
+  },
+  {
+    "mode": "flat",
+    "query": "model",
+    "rows": 1200,
+    "base_peak_kib": 127636,
+    "peak_kib": 127636,
+    "incremental_peak_kib": 0
+  },
+  {
+    "mode": "staged",
+    "query": "can",
+    "rows": 5993,
+    "base_peak_kib": 127824,
+    "peak_kib": 152500,
+    "incremental_peak_kib": 24676
+  },
+  {
+    "mode": "fused",
+    "query": "can",
+    "rows": 5993,
+    "base_peak_kib": 127636,
+    "peak_kib": 127636,
+    "incremental_peak_kib": 0
+  },
+  {
+    "mode": "flat",
+    "query": "can",
+    "rows": 5993,
+    "base_peak_kib": 127636,
+    "peak_kib": 152708,
+    "incremental_peak_kib": 25072
+  }
+]
