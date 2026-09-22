@@ -65,4 +65,8 @@ python -m pytest /path/to/openpilot/openpilot/cereal/messaging/tests \
   /path/to/openpilot/openpilot/tools/lib/tests/test_logreader.py
 ```
 
+The [100-line openpilot benchmark](benchmarks/README.md) measures live messaging
+and LogReader workloads. Its [initial baseline](benchmarks/baseline.md) records
+the starting point for Python performance work.
+
 See [LICENSE.md](LICENSE.md) for the upstream BSD license and attribution.
