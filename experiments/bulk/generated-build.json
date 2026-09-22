@@ -1,0 +1,13 @@
+{
+  "dependency_branch": "speed/generated",
+  "dependency_base": "b8ec065b16290deb62e309b0443e6a8ccec23259",
+  "openpilot_commit": "7f6f13997c3c9b8e27e1581583f61e3fcabc5151",
+  "sha256": {
+    "generate.py": "bdb50ff63675f454f6a1368d29c0d8f760a673932ca185499706f5a963bbd40e",
+    "runtime.h": "2dfd4da7ab00d683387d680bed3e9b20d7a0423bf91cd3923912b138aee8110e",
+    "accessors.h": "e81b474f76175b85f6e4c3f63d22898a84b60a5c6397d2157d2cf1e3ef4077b7",
+    "generated_consumer.h": "06a313cb458ca4a7e1f115f7c9f8cb4eed91ad7ccaa88c5312779942771b2bcc",
+    "generated_cython.cpython-312-x86_64-linux-gnu.so": "24b599aeacb189c685e66aa953d0e2d5185863a6e45b9b2a40dc9323a828c71d",
+    "generated_native.cpython-312-x86_64-linux-gnu.so": "3d6b0cf6c3001c9cd9aa680f309c94a7f3d113251de8d017b330062d2e52d114"
+  }
+}
