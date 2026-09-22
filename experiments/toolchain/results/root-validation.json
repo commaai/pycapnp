@@ -1,0 +1,178 @@
+{
+  "root-clang-heldout": {
+    "corpus_sha256": "e74408571fc8decef9b421d5cdc220071109bdc950b192ddd6c0b512d8f935d8",
+    "corpus_bytes": 653264,
+    "events": 1060,
+    "event_types": 60,
+    "workloads": {
+      "live read": "1060",
+      "field write+encode": "1060",
+      "kwargs write+encode": "1060",
+      "payload assignment": "1060",
+      "CAN cached read": "58",
+      "CAN cached write": "58",
+      "LogReader parse+scan": "1060",
+      "dict export": "1060",
+      "copy+encode": "1060",
+      "reader pickle": "1060",
+      "LogReader pickle": "1060",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-clang-pgo-thinlto-heldout": {
+    "corpus_sha256": "e74408571fc8decef9b421d5cdc220071109bdc950b192ddd6c0b512d8f935d8",
+    "corpus_bytes": 653264,
+    "events": 1060,
+    "event_types": 60,
+    "workloads": {
+      "live read": "1060",
+      "field write+encode": "1060",
+      "kwargs write+encode": "1060",
+      "payload assignment": "1060",
+      "CAN cached read": "58",
+      "CAN cached write": "58",
+      "LogReader parse+scan": "1060",
+      "dict export": "1060",
+      "copy+encode": "1060",
+      "reader pickle": "1060",
+      "LogReader pickle": "1060",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-clang-pgo-thinlto-native-hidden-heldout": {
+    "corpus_sha256": "e74408571fc8decef9b421d5cdc220071109bdc950b192ddd6c0b512d8f935d8",
+    "corpus_bytes": 653264,
+    "events": 1060,
+    "event_types": 60,
+    "workloads": {
+      "live read": "1060",
+      "field write+encode": "1060",
+      "kwargs write+encode": "1060",
+      "payload assignment": "1060",
+      "CAN cached read": "58",
+      "CAN cached write": "58",
+      "LogReader parse+scan": "1060",
+      "dict export": "1060",
+      "copy+encode": "1060",
+      "reader pickle": "1060",
+      "LogReader pickle": "1060",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-clang-pgo-thinlto-native-hidden-route": {
+    "corpus_sha256": "836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde",
+    "corpus_bytes": 693448,
+    "events": 1049,
+    "event_types": 49,
+    "workloads": {
+      "live read": "1049",
+      "field write+encode": "1049",
+      "kwargs write+encode": "1049",
+      "payload assignment": "1049",
+      "CAN cached read": "54",
+      "CAN cached write": "54",
+      "LogReader parse+scan": "1049",
+      "dict export": "1049",
+      "copy+encode": "1049",
+      "reader pickle": "1049",
+      "LogReader pickle": "1049",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-clang-pgo-thinlto-route": {
+    "corpus_sha256": "836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde",
+    "corpus_bytes": 693448,
+    "events": 1049,
+    "event_types": 49,
+    "workloads": {
+      "live read": "1049",
+      "field write+encode": "1049",
+      "kwargs write+encode": "1049",
+      "payload assignment": "1049",
+      "CAN cached read": "54",
+      "CAN cached write": "54",
+      "LogReader parse+scan": "1049",
+      "dict export": "1049",
+      "copy+encode": "1049",
+      "reader pickle": "1049",
+      "LogReader pickle": "1049",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-clang-route": {
+    "corpus_sha256": "836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde",
+    "corpus_bytes": 693448,
+    "events": 1049,
+    "event_types": 49,
+    "workloads": {
+      "live read": "1049",
+      "field write+encode": "1049",
+      "kwargs write+encode": "1049",
+      "payload assignment": "1049",
+      "CAN cached read": "54",
+      "CAN cached write": "54",
+      "LogReader parse+scan": "1049",
+      "dict export": "1049",
+      "copy+encode": "1049",
+      "reader pickle": "1049",
+      "LogReader pickle": "1049",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-pgo-lto-hidden-heldout": {
+    "corpus_sha256": "e74408571fc8decef9b421d5cdc220071109bdc950b192ddd6c0b512d8f935d8",
+    "corpus_bytes": 653264,
+    "events": 1060,
+    "event_types": 60,
+    "workloads": {
+      "live read": "1060",
+      "field write+encode": "1060",
+      "kwargs write+encode": "1060",
+      "payload assignment": "1060",
+      "CAN cached read": "58",
+      "CAN cached write": "58",
+      "LogReader parse+scan": "1060",
+      "dict export": "1060",
+      "copy+encode": "1060",
+      "reader pickle": "1060",
+      "LogReader pickle": "1060",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  },
+  "root-pgo-lto-hidden-route": {
+    "corpus_sha256": "836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde",
+    "corpus_bytes": 693448,
+    "events": 1049,
+    "event_types": 49,
+    "workloads": {
+      "live read": "1049",
+      "field write+encode": "1049",
+      "kwargs write+encode": "1049",
+      "payload assignment": "1049",
+      "CAN cached read": "54",
+      "CAN cached write": "54",
+      "LogReader parse+scan": "1049",
+      "dict export": "1049",
+      "copy+encode": "1049",
+      "reader pickle": "1049",
+      "LogReader pickle": "1049",
+      "schema reflection": "1"
+    },
+    "files": 4,
+    "binary_hashes_match": true
+  }
+}

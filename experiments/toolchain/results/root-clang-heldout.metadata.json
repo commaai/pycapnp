@@ -1,0 +1,16 @@
+{
+  "arguments": {
+    "python": "/home/batman/openpilot/.venv/bin/python",
+    "openpilot": "/home/batman/openpilot",
+    "log": "/tmp/opendbc_logs/ascent_1.rlog.zst",
+    "candidate": "clang",
+    "cpu": "0",
+    "label": "root-clang-heldout",
+    "repeat": 5
+  },
+  "binaries": {
+    "baseline": "e24ec361874287ef280d7492528594e2e7d613c32c51461036b15697055faece",
+    "clang": "8ca8ab387f77114dc6fa76caf00282c890770fc2a663f613ec6f4ed4c2492c94"
+  },
+  "log_sha256": "384be782dcb714932c329c53f348bf103bd642381defbae8ab5978eb086c4d2a"
+}

@@ -1,0 +1,16 @@
+{
+  "arguments": {
+    "python": "/home/batman/openpilot/.venv/bin/python",
+    "openpilot": "/home/batman/openpilot",
+    "log": "/tmp/pr3704_logs/1.rlog.zst",
+    "candidate": "clang-pgo-thinlto",
+    "cpu": "0",
+    "label": "root-clang-pgo-thinlto-route",
+    "repeat": 5
+  },
+  "binaries": {
+    "baseline": "e24ec361874287ef280d7492528594e2e7d613c32c51461036b15697055faece",
+    "clang-pgo-thinlto": "b755e88230a26c5922b7f30606f670830bda6c6f63a17f1e19bbdd9c5d5438f9"
+  },
+  "log_sha256": "0cd538d9c73d64271d98f908d02465f7513ed2d79c8e4ea0d76a59ff26f6446b"
+}

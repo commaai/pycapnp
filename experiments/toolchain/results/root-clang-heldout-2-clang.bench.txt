@@ -1,0 +1,15 @@
+Python 3.12.13 | capnp 2.2.4 | /tmp/capnp-speed/toolchain/capnp/__init__.py
+sha256=e74408571fc8decef9b421d5cdc220071109bdc950b192ddd6c0b512d8f935d8 bytes=653264
+{'initData': 2, 'carOutput': 69, 'customReserved8': 53, 'customReserved6': 12, 'carControl': 80, 'controlsState': 77, 'can': 58, 'pandaStates': 9, 'rawAudioData': 13, 'accelerometer': 62, 'selfdriveState': 60, 'vehicleParameters': 19, 'customReserved2': 60, 'sendcan': 58, 'radarTracks': 10, 'gyroscope': 38, 'logMessage': 6, 'wideRoadEncodeIdx': 14, 'cameraOdometry': 13, 'cabinEncodeIdx': 13, 'carState': 51, 'ubloxRaw': 11, 'wideRoadCameraState': 16, 'cabinCameraState': 11, 'longitudinalPlan': 15, 'drivingModelData': 10, 'driverStateV2': 11, 'extrinsicsCalibration': 6, 'gpsLocationExternal': 7, 'lateralTorqueParameters': 8, 'driverAssistance': 16, 'narrowRoadCameraState': 18, 'ubloxGnss': 15, 'customReserved4': 7, 'radarState': 19, 'uiDebug': 13, 'deviceMotion': 16, 'modelV2': 10, 'peripheralState': 2, 'customReserved7': 12, 'customReserved19': 2, 'narrowRoadEncodeIdx': 12, 'driverMonitoringState': 12, 'lateralDelay': 4, 'managerState': 2, 'deviceState': 2, 'qNarrowRoadEncodeIdx': 6, 'soundPressure': 3, 'onroadEvents': 4, 'procLog': 2, 'customReserved3': 2, 'sentinel': 1, 'customReserved5': 1, 'temperatureSensor': 1, 'customReserved17': 1, 'operatingSystemLog': 1, 'customReserved9': 1, 'carParams': 1, 'clocks': 1, 'thumbnail': 1}
+live read                  3.47 us/item  [3.44, 3.51]  n=1060
+field write+encode        16.90 us/item  [16.69, 20.69]  n=1060
+kwargs write+encode       22.99 us/item  [22.94, 23.27]  n=1060
+payload assignment         1.20 us/item  [1.19, 1.21]  n=1060
+CAN cached read           11.53 us/item  [11.52, 11.67]  n=58
+CAN cached write           9.59 us/item  [9.58, 9.62]  n=58
+LogReader parse+scan       3.22 us/item  [3.21, 3.24]  n=1060
+dict export               49.05 us/item  [48.64, 50.29]  n=1060
+copy+encode                0.74 us/item  [0.74, 0.75]  n=1060
+reader pickle              2.83 us/item  [2.82, 2.89]  n=1060
+LogReader pickle           3.33 us/item  [3.32, 3.38]  n=1060
+schema reflection        288.52 us/item  [286.39, 288.98]  n=1

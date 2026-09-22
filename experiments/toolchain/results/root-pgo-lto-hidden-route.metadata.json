@@ -1,0 +1,16 @@
+{
+  "arguments": {
+    "python": "/home/batman/openpilot/.venv/bin/python",
+    "openpilot": "/home/batman/openpilot",
+    "log": "/tmp/pr3704_logs/1.rlog.zst",
+    "candidate": "pgo-lto-hidden",
+    "cpu": "0",
+    "label": "root-pgo-lto-hidden-route",
+    "repeat": 5
+  },
+  "binaries": {
+    "baseline": "e24ec361874287ef280d7492528594e2e7d613c32c51461036b15697055faece",
+    "pgo-lto-hidden": "b83b2c03c2b5e28cdd0caf25a7943b2eea0a23eb52fb63e7b2677f710535f6c0"
+  },
+  "log_sha256": "0cd538d9c73d64271d98f908d02465f7513ed2d79c8e4ea0d76a59ff26f6446b"
+}

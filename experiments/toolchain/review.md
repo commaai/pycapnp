@@ -16,8 +16,9 @@ Correctness signoff was granted for this tested x86 host configuration.
 Measurement reviewer required fresh-process paired comparisons, SMT sibling
 reservation, per-workload ratios and regressions, and a separate-car held-out
 PGO evaluation. The exploratory sequential results are explicitly not a
-controlled speedup comparison. Final measurement signoff remains pending the
-coordinated quiet-host comparison phase run by the parent agent.
+controlled speedup comparison. Final measurement signoff was granted after the coordinated quiet-host
+comparisons and separate-car heldout evaluation; see `final-review.md` for
+tradeoffs, noisy cases, independent artifact/corpus checks, and precise limits.
 
 No production optimization default has been changed. `PYCAPNP_OPT_FLAGS` is
 optional; the package header dependency fix applies to ordinary builds too.

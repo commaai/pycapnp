@@ -1,0 +1,16 @@
+{
+  "arguments": {
+    "python": "/home/batman/openpilot/.venv/bin/python",
+    "openpilot": "/home/batman/openpilot",
+    "log": "/tmp/opendbc_logs/ascent_1.rlog.zst",
+    "candidate": "pgo-lto-hidden",
+    "cpu": "0",
+    "label": "root-pgo-lto-hidden-heldout",
+    "repeat": 5
+  },
+  "binaries": {
+    "baseline": "e24ec361874287ef280d7492528594e2e7d613c32c51461036b15697055faece",
+    "pgo-lto-hidden": "b83b2c03c2b5e28cdd0caf25a7943b2eea0a23eb52fb63e7b2677f710535f6c0"
+  },
+  "log_sha256": "384be782dcb714932c329c53f348bf103bd642381defbae8ab5978eb086c4d2a"
+}

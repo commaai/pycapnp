@@ -68,3 +68,10 @@ An initial O3 baseline was also excluded from comparisons: setting generic
 The accepted baseline is rebuilt through the same `PYCAPNP_OPT_FLAGS` switch
 as every candidate, preserving Python's default flags. Its predecessor is
 retained under `baseline-flags-rejected` solely as audit evidence.
+
+## Final comparisons
+
+See [final-review.md](final-review.md) for the controlled four-candidate, two-corpus
+ABBA results and independent final signoff. Raw outputs, corpus validation, and
+binary provenance are retained under `results/root-*`; no default compiler change
+is recommended because the candidates have workload-specific tradeoffs.
