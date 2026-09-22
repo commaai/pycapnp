@@ -3,135 +3,48 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }} ${{ matrix.arch }}
-    runs-on: ${{ matrix.os }}
+  wheels:
     strategy:
-      max-parallel: 99
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             arch: x86_64
-          - os: ubuntu-latest
-            arch: i686
-          # Native ARM runner — no QEMU, drastically faster than emulated aarch64
           - os: ubuntu-24.04-arm
             arch: aarch64
-
-          - os: macos-15
-            arch: x86_64
           - os: macos-15
             arch: arm64
-          # Disabled until someone figures out how to build capnproto for arm64 and x86_64 simultaneously
-          # - os: macOS-latest
-          #   arch: universal2
-
-          - os: windows-2022
-            arch: AMD64
-          - os: windows-2022
-            arch: x86
-          # Does not build currently
-          # - os: windows-2019
-          #   arch: ARM64
-
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
-
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4.1
-        with:
-          output-dir: wheelhouse
+      - uses: pypa/cibuildwheel@v3.4.1
         env:
+          CIBW_BUILD: cp312-*
           CIBW_ARCHS: ${{ matrix.arch }}
-          # Drop EOL CPython 3.8 (also avoids the macOS x86_64-only-installer warning)
-          CIBW_SKIP: "cp38-*"
-          CIBW_TEST_REQUIRES: pytest pytest-asyncio
-          CIBW_TEST_COMMAND: pytest {project}
-          # Force libcapnp to build for the target arch on macOS (the runner
-          # is arm64, so without this an x86_64 wheel ends up linking against
-          # an arm64 libkj/libcapnp and failing to load at test time).
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: python -m pytest {project}/test
+          CIBW_CONFIG_SETTINGS: force-bundled-libcapnp=true
           CMAKE_OSX_ARCHITECTURES: "${{ runner.os == 'macOS' && matrix.arch || '' }}"
-
       - uses: actions/upload-artifact@v6
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ matrix.arch }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
+          name: wheels-${{ matrix.arch }}-${{ matrix.os }}
+          path: wheelhouse/*.whl
 
-  # Exotic arches built via QEMU emulation — very slow (often >1h), so only run
-  # on release tags rather than every push/PR.
-  build_wheels_exotic:
-    name: Build wheels (exotic) ${{ matrix.arch }}
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [ppc64le, s390x]
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4.1
-        with:
-          output-dir: wheelhouse
-        env:
-          CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_SKIP: "cp38-*"
-          # Tests under QEMU are extremely slow; skip them for these arches.
-          CIBW_TEST_SKIP: "*"
-
-      - uses: actions/upload-artifact@v6
-        with:
-          name: cibw-wheels-${{ matrix.arch }}
-          path: ./wheelhouse/*.whl
-
-  build_sdist:
-    name: Build source distribution
+  source:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
-      - name: Build sdist
-        run: pipx run build --sdist
-
+      - uses: astral-sh/setup-uv@v3
+      - run: uv build --sdist
       - uses: actions/upload-artifact@v6
         with:
-          name: cibw-sdist
+          name: sdist
           path: dist/*.tar.gz
 
   lint:
-    name: Lint and format with ruff
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
-      - name: Lint and format with ruff
-        run: |
-          pip install --upgrade pip
-          pip install --group lint
-          ruff check .
-          ruff format --check .
-
-  # upload_pypi:
-  #   needs: [build_wheels, build_sdist]
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-  #   steps:
-  #     - uses: actions/download-artifact@v3
-  #       with:
-  #         # unpacks default artifact into dist/
-  #         # if `name: artifact` is omitted, the action will create extra parent dir
-  #         name: artifact
-  #         path: dist
-
-  #     - uses: pypa/gh-action-pypi-publish@v1.5.0
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.PYPI_PASSWORD_RELEASE }}
-
-  #         # password: ${{ secrets.PYPI_PASSWORD }}
-  #         # repository_url: https://test.pypi.org/legacy/
+      - uses: astral-sh/setup-uv@v3
+      - run: uvx ruff@0.16.8 check .
+      - run: uvx ruff@0.16.8 format --check .

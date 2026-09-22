@@ -1,18 +1,6 @@
-include README.md
-include LICENSE.md
-include CHANGELOG.md
-include requirements.txt
-include buildutils/*
-include _custom_build/*
-include capnp/lib/capnp_api.h
-include Pipfile
-include tox.ini
-recursive-include examples *.capnp
-recursive-include examples *.cert
-recursive-include examples *.key
-recursive-include examples *.py
-recursive-include test *.binary
-recursive-include test *.capnp
-recursive-include test *.packed
-recursive-include test *.txt
-recursive-include test *.py
+include README.md LICENSE.md
+include buildutils/*.py
+include _custom_build/*.py
+recursive-include capnp *.py *.pyx *.pxd *.h *.cpp
+recursive-include test *.py *.capnp *.binary *.txt
+exclude capnp/lib/capnp.cpp capnp/lib/capnp.h capnp/lib/capnp_api.h

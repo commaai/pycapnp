@@ -50,7 +50,7 @@ def test_which_builder(addressbook):
 
 
 def test_which_reader(addressbook):
-    def writeAddressBook(fd):
+    def writeAddressBook(file):
         message = capnp._MallocMessageBuilder()
         addressBook = message.init_root(addressbook.AddressBook)
         people = addressBook.init("people", 2)
@@ -61,13 +61,14 @@ def test_which_reader(addressbook):
         bob = people[1]
         bob.employment.unemployed = None
 
-        capnp._write_packed_message_to_fd(fd, message)
+        file.write(addressBook.to_bytes())
 
     f = tempfile.TemporaryFile()
-    writeAddressBook(f.fileno())
+    writeAddressBook(f)
     f.seek(0)
 
-    addresses = addressbook.AddressBook.read_packed(f)
+    with addressbook.AddressBook.from_bytes(f.read()) as reader:
+        addresses = reader
 
     people = addresses.people
 

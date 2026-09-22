@@ -20,7 +20,7 @@ def addressbook():
 
 
 def test_addressbook_message_classes(addressbook):
-    def writeAddressBook(fd):
+    def writeAddressBook(file):
         message = capnp._MallocMessageBuilder()
         addressBook = message.init_root(addressbook.AddressBook)
         people = addressBook.init("people", 2)
@@ -45,11 +45,11 @@ def test_addressbook_message_classes(addressbook):
         bobPhones[1].type = "work"
         bob.employment.unemployed = None
 
-        capnp._write_packed_message_to_fd(fd, message)
+        file.write(addressBook.to_bytes())
 
-    def printAddressBook(fd):
-        message = capnp._PackedFdMessageReader(f)
-        addressBook = message.get_root(addressbook.AddressBook)
+    def printAddressBook(file):
+        with addressbook.AddressBook.from_bytes(file.read()) as reader:
+            addressBook = reader
 
         people = addressBook.people
 
@@ -73,11 +73,11 @@ def test_addressbook_message_classes(addressbook):
         assert bobPhones[1].type == "work"
         assert bob.employment.unemployed is None
 
-    f = open("example", "w")
-    writeAddressBook(f.fileno())
+    f = open("example", "wb")
+    writeAddressBook(f)
 
-    f = open("example", "r")
-    printAddressBook(f.fileno())
+    f = open("example", "rb")
+    printAddressBook(f)
 
 
 def test_addressbook(addressbook):
@@ -105,10 +105,11 @@ def test_addressbook(addressbook):
         bobPhones[1].type = "work"
         bob.employment.unemployed = None
 
-        addresses.write(file)
+        file.write(addresses.to_bytes())
 
     def printAddressBook(file):
-        addresses = addressbook.AddressBook.read(file)
+        with addressbook.AddressBook.from_bytes(file.read()) as reader:
+            addresses = reader
 
         people = addresses.people
 
@@ -132,71 +133,10 @@ def test_addressbook(addressbook):
         assert bobPhones[1].type == "work"
         assert bob.employment.unemployed is None
 
-    f = open("example", "w")
+    f = open("example", "wb")
     writeAddressBook(f)
 
-    f = open("example", "r")
-    printAddressBook(f)
-
-
-def test_addressbook_resizable(addressbook):
-    def writeAddressBook(file):
-        addresses = addressbook.AddressBook.new_message()
-        people = addresses.init_resizable_list("people")
-
-        alice = people.add()
-        alice.id = 123
-        alice.name = "Alice"
-        alice.email = "alice@example.com"
-        alicePhones = alice.init("phones", 1)
-        alicePhones[0].number = "555-1212"
-        alicePhones[0].type = "mobile"
-        alice.employment.school = "MIT"
-
-        bob = people.add()
-        bob.id = 456
-        bob.name = "Bob"
-        bob.email = "bob@example.com"
-        bobPhones = bob.init("phones", 2)
-        bobPhones[0].number = "555-4567"
-        bobPhones[0].type = "home"
-        bobPhones[1].number = "555-7654"
-        bobPhones[1].type = "work"
-        bob.employment.unemployed = None
-
-        people.finish()
-
-        addresses.write(file)
-
-    def printAddressBook(file):
-        addresses = addressbook.AddressBook.read(file)
-
-        people = addresses.people
-
-        alice = people[0]
-        assert alice.id == 123
-        assert alice.name == "Alice"
-        assert alice.email == "alice@example.com"
-        alicePhones = alice.phones
-        assert alicePhones[0].number == "555-1212"
-        assert alicePhones[0].type == "mobile"
-        assert alice.employment.school == "MIT"
-
-        bob = people[1]
-        assert bob.id == 456
-        assert bob.name == "Bob"
-        assert bob.email == "bob@example.com"
-        bobPhones = bob.phones
-        assert bobPhones[0].number == "555-4567"
-        assert bobPhones[0].type == "home"
-        assert bobPhones[1].number == "555-7654"
-        assert bobPhones[1].type == "work"
-        assert bob.employment.unemployed is None
-
-    f = open("example", "w")
-    writeAddressBook(f)
-
-    f = open("example", "r")
+    f = open("example", "rb")
     printAddressBook(f)
 
 
@@ -230,10 +170,11 @@ def test_addressbook_explicit_fields(addressbook):
         employment = bob._get_by_field(person_fields["employment"])
         employment._set_by_field(addressbook.Person.Employment.schema.fields["unemployed"], None)
 
-        addresses.write(file)
+        file.write(addresses.to_bytes())
 
     def printAddressBook(file):
-        addresses = addressbook.AddressBook.read(file)
+        with addressbook.AddressBook.from_bytes(file.read()) as reader:
+            addresses = reader
         address_fields = addressbook.AddressBook.schema.fields
         person_fields = addressbook.Person.schema.fields
         phone_fields = addressbook.Person.PhoneNumber.schema.fields
@@ -262,10 +203,10 @@ def test_addressbook_explicit_fields(addressbook):
         employment = bob._get_by_field(person_fields["employment"])
         employment._get_by_field(addressbook.Person.Employment.schema.fields["unemployed"]) is None
 
-    f = open("example", "w")
+    f = open("example", "wb")
     writeAddressBook(f)
 
-    f = open("example", "r")
+    f = open("example", "rb")
     printAddressBook(f)
 
 
@@ -515,8 +456,9 @@ def test_build_first_segment_size(all_types):
 
 
 def test_binary_read(all_types):
-    f = open(os.path.join(this_dir, "all-types.binary"), "r", encoding="utf8")
-    root = all_types.TestAllTypes.read(f)
+    f = open(os.path.join(this_dir, "all-types.binary"), "rb")
+    with all_types.TestAllTypes.from_bytes(f.read()) as reader:
+        root = reader
     check_all_types(root)
 
     expectedText = open(os.path.join(this_dir, "all-types.txt"), "r", encoding="utf8").read()
@@ -532,26 +474,10 @@ def test_binary_read(all_types):
     check_all_types(builder2.get_root(all_types.TestAllTypes))
 
 
-def test_packed_read(all_types):
-    f = open(os.path.join(this_dir, "all-types.packed"), "r", encoding="utf8")
-    root = all_types.TestAllTypes.read_packed(f)
-    check_all_types(root)
-
-    expectedText = open(os.path.join(this_dir, "all-types.txt"), "r", encoding="utf8").read()
-    assert str(root) + "\n" == expectedText
-
-
 def test_binary_write(all_types):
     root = all_types.TestAllTypes.new_message()
     init_all_types(root)
-    root.write(open("example", "w"))
+    open("example", "wb").write(root.to_bytes())
 
-    check_all_types(all_types.TestAllTypes.read(open("example", "r")))
-
-
-def test_packed_write(all_types):
-    root = all_types.TestAllTypes.new_message()
-    init_all_types(root)
-    root.write_packed(open("example", "w"))
-
-    check_all_types(all_types.TestAllTypes.read_packed(open("example", "r")))
+    with all_types.TestAllTypes.from_bytes(open("example", "rb").read()) as reader:
+        check_all_types(reader)

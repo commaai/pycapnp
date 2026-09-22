@@ -1,11 +1,9 @@
 import warnings
 from contextlib import contextmanager
 
-import gc
 import pytest
 import capnp
 import os
-import platform
 import test_regression
 import tempfile
 import pickle
@@ -20,28 +18,6 @@ def all_types():
     return capnp.load(os.path.join(this_dir, "all_types.capnp"))
 
 
-def test_roundtrip_file(all_types):
-    f = tempfile.TemporaryFile()
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    msg.write(f)
-
-    f.seek(0)
-    msg = all_types.TestAllTypes.read(f)
-    test_regression.check_all_types(msg)
-
-
-def test_roundtrip_file_packed(all_types):
-    f = tempfile.TemporaryFile()
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    msg.write_packed(f)
-
-    f.seek(0)
-    msg = all_types.TestAllTypes.read_packed(f)
-    test_regression.check_all_types(msg)
-
-
 def test_roundtrip_bytes(all_types):
     msg = all_types.TestAllTypes.new_message()
     test_regression.init_all_types(msg)
@@ -49,105 +25,6 @@ def test_roundtrip_bytes(all_types):
 
     with all_types.TestAllTypes.from_bytes(message_bytes) as msg:
         test_regression.check_all_types(msg)
-
-
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="TODO: Investigate why this works on CPython but fails on PyPy.",
-)
-def test_roundtrip_segments(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    segments = msg.to_segments()
-    msg = all_types.TestAllTypes.from_segments(segments)
-    test_regression.check_all_types(msg)
-
-
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="TODO: Investigate segmented serialization support on PyPy.",
-)
-def test_segment_views_are_read_only_buffers(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-
-    segments = msg.to_segments()
-    segment_views = msg.to_segment_views()
-
-    assert len(segment_views) == len(segments)
-    assert len(segment_views) >= 1
-
-    for segment_view, segment_bytes in zip(segment_views, segments):
-        assert not isinstance(segment_view, bytes)
-        view = memoryview(segment_view)
-        try:
-            assert view.readonly is True
-            assert view.tobytes() == segment_bytes
-        finally:
-            view.release()
-
-
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="TODO: Investigate segmented serialization support on PyPy.",
-)
-def test_roundtrip_segment_views(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-
-    segment_views = msg.to_segment_views()
-    msg = all_types.TestAllTypes.from_segments(segment_views)
-    test_regression.check_all_types(msg)
-
-
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="TODO: Investigate segmented serialization support on PyPy.",
-)
-def test_segment_views_are_not_writable(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-
-    segment_views = msg.to_segment_views()
-    view = memoryview(segment_views[0])
-    try:
-        assert len(view) > 0
-        with pytest.raises(TypeError):
-            view[0] = 0
-    finally:
-        view.release()
-
-
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="TODO: Investigate segmented serialization support on PyPy.",
-)
-def test_segment_view_keeps_message_alive(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-
-    segment_views = msg.to_segment_views()
-    segment_view = segment_views[0]
-    view = memoryview(segment_view)
-    expected = view.tobytes()
-
-    del msg
-    del segment_views
-    del segment_view
-    gc.collect()
-
-    try:
-        assert view.tobytes() == expected
-    finally:
-        view.release()
-
-
-def test_segment_views_require_root_struct(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    nested = msg.init("structField")
-
-    with pytest.raises(capnp.KjException):
-        nested.to_segment_views()
 
 
 @pytest.mark.skipif(
@@ -159,7 +36,7 @@ def test_roundtrip_bytes_mmap(all_types):
     test_regression.init_all_types(msg)
 
     with tempfile.TemporaryFile() as f:
-        msg.write(f)
+        f.write(msg.to_bytes())
         length = f.tell()
 
         f.seek(0)
@@ -188,19 +65,6 @@ def test_roundtrip_bytes_fail(all_types):
             pass
 
 
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="This works in PyPy 4.0.1 but travisci's version of PyPy has some bug that fails this test.",
-)
-def test_roundtrip_bytes_packed(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    message_bytes = msg.to_bytes_packed()
-
-    msg = all_types.TestAllTypes.from_bytes_packed(message_bytes)
-    test_regression.check_all_types(msg)
-
-
 @contextmanager
 def _warnings(expected_count=2, expected_text="This message has already been written once."):
     with warnings.catch_warnings(record=True) as w:
@@ -209,23 +73,6 @@ def _warnings(expected_count=2, expected_text="This message has already been wri
         assert len(w) == expected_count
         assert all(issubclass(x.category, UserWarning) for x in w), w
         assert all(expected_text in str(x.message) for x in w), w
-
-
-def test_roundtrip_file_multiple(all_types):
-    f = tempfile.TemporaryFile()
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    msg.write(f)
-    with _warnings(2):
-        msg.write(f)
-        msg.write(f)
-
-    f.seek(0)
-    i = 0
-    for msg in all_types.TestAllTypes.read_multiple(f):
-        test_regression.check_all_types(msg)
-        i += 1
-    assert i == 3
 
 
 def test_roundtrip_bytes_multiple(all_types):
@@ -242,63 +89,6 @@ def test_roundtrip_bytes_multiple(all_types):
         test_regression.check_all_types(msg)
         i += 1
     assert i == 3
-
-
-def test_roundtrip_file_multiple_packed(all_types):
-    f = tempfile.TemporaryFile()
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    msg.write_packed(f)
-    with _warnings(2):
-        msg.write_packed(f)
-        msg.write_packed(f)
-
-    f.seek(0)
-    i = 0
-    for msg in all_types.TestAllTypes.read_multiple_packed(f):
-        test_regression.check_all_types(msg)
-        i += 1
-    assert i == 3
-
-
-def test_roundtrip_bytes_multiple_packed(all_types):
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-
-    msgs = msg.to_bytes_packed()
-    with _warnings(2):
-        msgs += msg.to_bytes_packed()
-        msgs += msg.to_bytes_packed()
-
-    i = 0
-    for msg in all_types.TestAllTypes.read_multiple_bytes_packed(msgs):
-        test_regression.check_all_types(msg)
-        i += 1
-    assert i == 3
-
-
-def test_file_and_bytes(all_types):
-    f = tempfile.TemporaryFile()
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    msg.write(f)
-
-    f.seek(0)
-
-    with _warnings(1):
-        assert f.read() == msg.to_bytes()
-
-
-def test_file_and_bytes_packed(all_types):
-    f = tempfile.TemporaryFile()
-    msg = all_types.TestAllTypes.new_message()
-    test_regression.init_all_types(msg)
-    msg.write_packed(f)
-
-    f.seek(0)
-
-    with _warnings(1):
-        assert f.read() == msg.to_bytes_packed()
 
 
 def test_pickle(all_types):
@@ -326,22 +116,6 @@ def test_from_bytes_traversal_limit(all_types):
             assert msg.structList[i].uInt8Field == 0
 
 
-def test_from_bytes_packed_traversal_limit(all_types):
-    size = 1024
-    bld = all_types.TestAllTypes.new_message()
-    bld.init("structList", size)
-    data = bld.to_bytes_packed()
-
-    msg = all_types.TestAllTypes.from_bytes_packed(data)
-    with pytest.raises(capnp.KjException):
-        for i in range(0, size):
-            msg.structList[i].uInt8Field == 0
-
-    msg = all_types.TestAllTypes.from_bytes_packed(data, traversal_limit_in_words=2**62)
-    for i in range(0, size):
-        assert msg.structList[i].uInt8Field == 0
-
-
 def test_malformed_text_field_reraise():
     SCHEMA = "@0xdbb9ad1f14bf0b36;\nstruct Person { name @0 :Text; age @1 :UInt32; }\n"
     with tempfile.NamedTemporaryFile(suffix=".capnp", mode="w", delete=False) as f:
@@ -353,10 +127,7 @@ def test_malformed_text_field_reraise():
     buf = bytearray(Person.new_message(name="alice", age=30).to_bytes())
     buf[37] ^= 0xFF
 
-    # The process should raise an exception, not SIGSEGV
-    try:
-        with Person.from_bytes(bytes(buf), traversal_limit_in_words=2**20) as r:
-            _ = str(r.name)
-    except Exception:
-        # Success: We caught an exception cleanly
-        pass
+    # An invalid UTF-8 error description may itself raise UnicodeDecodeError.
+    with pytest.raises((capnp.KjException, UnicodeDecodeError)):
+        with Person.from_bytes(bytes(buf), traversal_limit_in_words=2**20) as reader:
+            _ = reader.name

@@ -24,25 +24,13 @@ def test_large_read(test_capnp):
     for i in range(len(values)):
         values[i] = i
 
-    array.write_packed(f)
+    f.write(array.to_bytes())
     f.seek(0)
 
-    array = test_capnp.MultiArray.read_packed(f)
+    with test_capnp.MultiArray.from_bytes(f.read()) as reader:
+        array = reader
     del f
     assert array.rows[0].values[9000] == 9000
-
-
-def test_large_read_multiple(test_capnp):
-    f = tempfile.TemporaryFile()
-    msg1 = test_capnp.Msg.new_message()
-    msg1.data = [0x41] * 8192
-    msg1.write(f)
-    msg2 = test_capnp.Msg.new_message()
-    msg2.write(f)
-    f.seek(0)
-
-    for m in test_capnp.Msg.read_multiple(f):
-        pass
 
 
 def get_two_adjacent_messages(test_capnp):

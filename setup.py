@@ -55,13 +55,9 @@ short_version = '%s'
 
 write_version_py()
 
-# Try to use README.md and CHANGELOG.md as description and changelog
+# Use the fork README as the package description
 with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
-with open("CHANGELOG.md", encoding="utf-8") as f:
-    changelog = f.read()
-changelog = "\nChangelog\n=============\n" + changelog
-long_description += changelog
 
 
 class clean(_clean):
@@ -154,8 +150,6 @@ class build_libcapnp_ext(build_ext_c):
 
             # Check if we've already built capnproto
             capnp_bin = os.path.join(build_dir, "bin", "capnp")
-            if os.name == "nt":
-                capnp_bin = os.path.join(build_dir, "bin", "capnp.exe")
 
             if not os.path.exists(capnp_bin):
                 # Not built, fetch and build
@@ -170,23 +164,10 @@ class build_libcapnp_ext(build_ext_c):
                 os.path.join(build_dir, "lib"),
             ] + self.library_dirs
 
-            # Copy .capnp files from source
-            src_glob = glob.glob(os.path.join(build_dir, "include", "capnp", "*.capnp"))
-            dst_dir = os.path.join(self.build_lib, "capnp")
-            os.makedirs(dst_dir, exist_ok=True)
-            for file in src_glob:
-                print("copying {} -> {}".format(file, dst_dir))
-                shutil.copy(file, dst_dir)
-
         return build_ext_c.run(self)
 
 
 extra_compile_args = ["--std=c++14"]
-extra_link_args = []
-if os.name == "nt":
-    extra_compile_args = ["/std:c++14", "/MD"]
-    extra_link_args = ["/MANIFEST"]
-
 import Cython.Build  # noqa: E402
 import Cython  # noqa: E402
 
@@ -194,26 +175,24 @@ extensions = [
     Extension(
         "*",
         [
-            "capnp/helpers/capabilityHelper.cpp",
-            "capnp/includes/PyCustomMessageBuilder.cpp",
+            "capnp/helpers/exception.cpp",
             "capnp/lib/*.pyx",
         ],
         extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args,
         language="c++",
     )
 ]
 
 setup(
-    python_requires=">=3.9",
+    python_requires=">=3.12",
     name="pycapnp",
-    packages=["capnp"],
+    packages=["capnp", "capnp.lib"],
+    include_package_data=False,
     version=VERSION,
     package_data={
         "capnp": [
             "*.pxd",
             "*.h",
-            "*.capnp",
             "helpers/*.pxd",
             "helpers/*.h",
             "includes/*.h",
@@ -222,13 +201,11 @@ setup(
             "lib/*.py",
             "lib/*.pyx",
             "lib/*.h",
-            "templates/*",
         ]
     },
     ext_modules=Cython.Build.cythonize(extensions),
     cmdclass={"clean": clean, "build_ext": build_libcapnp_ext},
     install_requires=[],
-    entry_points={"console_scripts": ["capnpc-cython = capnp._gen:main"]},
     # PyPi info
     description="A cython wrapping of the C++ Cap'n Proto library",
     long_description=long_description,
@@ -237,24 +214,19 @@ setup(
     # (setup.py only supports 1 author...)
     author="Jacob Alexander",  # <- Current maintainer; Original author -> Jason Paryani
     author_email="haata@kiibohd.com",
-    url="https://github.com/capnproto/pycapnp",
-    download_url="https://github.com/capnproto/pycapnp/archive/v%s.zip" % VERSION,
+    url="https://github.com/commaai/pycapnp",
+    download_url="https://github.com/commaai/pycapnp/archive/v%s.zip" % VERSION,
     keywords=["capnp", "capnproto", "Cap'n Proto", "pycapnp"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows :: Windows 10",
         "Operating System :: POSIX",
         "Programming Language :: C++",
         "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
-        "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Communications",
     ],
 )

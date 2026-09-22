@@ -1,265 +1,62 @@
-# pycapnp
+# pycapnp for openpilot
 
-[![Packaging Status](https://github.com/capnproto/pycapnp/workflows/Packaging%20Test/badge.svg)](https://github.com/capnproto/pycapnp/actions)
-[![manylinux2014 Status](https://github.com/capnproto/pycapnp/workflows/manylinux2014/badge.svg)](https://github.com/capnproto/pycapnp/actions)
-[![PyPI version](https://badge.fury.io/py/pycapnp.svg)](https://badge.fury.io/py/pycapnp)
+A serialization-only fork of [pycapnp](https://github.com/capnproto/pycapnp).
+The `minimal` branch starts at upstream commit
+`a0cb5cdf0673481f2f9850541f4d42b89698c476`, including the `from_dict` reference-cycle
+fix in upstream PR #407.
 
-[Cap'n'proto Mailing List](https://github.com/capnproto/capnproto/discussions) [Documentation](https://capnproto.github.io/pycapnp)
+The supported surface is based on openpilot at
+`7f6f13997c3c9b8e27e1581583f61e3fcabc5151`, including its opendbc checkout:
 
+- Explicit schema loading with `capnp.load()` and schema imports.
+- Dynamic structs, lists, enums, unions, nested groups, and constants.
+- Message construction, field access (including cached `_get_by_field` and
+  `_set_by_field`), dictionaries, reader/builder copies, and pickling.
+- Unpacked `to_bytes()`, `from_bytes()`, and `read_multiple_bytes()`, including
+  traversal/nesting limits and readers that retain their underlying message.
+- Schema reflection for cereal, CAN conversion, WebRTC, fuzzing, and replay tools.
 
-## Requirements
+Removed: RPC/capabilities, promises, KJ event loops, asyncio/network streams,
+packed serialization, file-descriptor I/O, segment APIs, borrowed Data views,
+custom allocators, orphans/resizable lists, AnyPointer wrappers, type registration,
+the Python schema import hook, and the Cython code generator. Their examples,
+tests, docs, dependencies, and unsupported-platform CI were removed too.
+`remove_import_hook()` remains a no-op for cereal/opendbc compatibility.
 
-* C++14 supported compiler
-  - gcc 6.1+ (5+ may work)
-  - clang 6 (3.4+ may work)
-  - Visual Studio 2017+
-* cmake (needed for bundled capnproto)
-  - ninja (macOS + Linux)
-  - Visual Studio 2017+
-* capnproto-1.0 (>=0.8.0 will also work if linking to system libraries)
-  - Not necessary if using bundled capnproto
-* Python development headers (i.e. Python.h)
-  - Distributables from python.org include these, however they are usually in a separate package on Linux distributions
+This is intentionally not a full upstream API replacement. The import and
+package names remain `capnp` and `pycapnp`. It must replace the installed pycapnp,
+not be installed alongside another distribution providing `capnp`.
 
-32-bit Linux requires that capnproto be compiled with `-fPIC`. This is usually set correctly unless you are compiling canproto yourself. This is also called `-DCMAKE_POSITION_INDEPENDENT_CODE=1` for cmake.
+## Build and test
 
-pycapnp has additional development dependencies, including cython and pytest. See requirements.txt for them all.
+Targets: CPython 3.12, Linux x86_64/aarch64, and macOS arm64. A C++14 compiler and
+CMake are required for a bundled build.
 
-
-## Building and installation
-
-Install with `pip install pycapnp`. You can set the CC environment variable to control which compiler is used, ie `CC=gcc-8.2 pip install pycapnp`.
-
-Or you can clone the repo like so:
-
-```bash
-git clone https://github.com/capnproto/pycapnp.git
-cd pycapnp
-pip install .
+```sh
+uv venv --python 3.12
+uv pip install cython setuptools wheel pkgconfig pytest build
+.venv/bin/python setup.py build_ext --inplace --force-bundled-libcapnp
+.venv/bin/python -m pytest
+.venv/bin/python -m build -Cforce-bundled-libcapnp=true
 ```
 
-By default, the setup script will automatically use the locally installed Cap'n Proto.
-If Cap'n Proto is not installed, it will bundle and build the matching Cap'n Proto library.
+The existing build fallback downloads Cap'n Proto 1.4.0. The extension links only
+`capnpc`, `capnp`, and `kj`; it does not link `capnp-rpc` or `kj-async`. `capnpc` is
+needed for runtime schema parsing. Owning/vendoring the C++ source itself is a
+separate step. To use a system installation, pass `--force-system-libcapnp` to
+`build_ext` (or `-Cforce-system-libcapnp=true` to the wheel build).
 
-To enforce bundling, the Cap'n Proto library:
+The retained upstream tests cover message construction, schema loading,
+reflection, binary fixtures, serialization, and exceptions. Added lifetime tests
+check kwargs construction with GC disabled and readers surviving their input or
+iterator. Optional integration tests use real openpilot schemas and exercise
+messaging, CAN conversion, WebRTC reflection, LogReader, pickling, and replay:
 
-```bash
-pip install . -C force-bundled-libcapnp=True
+```sh
+# Run in an environment with openpilot's dependencies and this fork installed.
+OPENPILOT_PATH=/path/to/openpilot python -m pytest test/test_openpilot.py
+python -m pytest /path/to/openpilot/openpilot/cereal/messaging/tests \
+  /path/to/openpilot/openpilot/tools/lib/tests/test_logreader.py
 ```
 
-If you wish to install using the latest upstream C++ Cap'n Proto:
-
-```bash
-pip install . \
-    -C force-bundled-libcapnp=True \
-    -C libcapnp-url="https://github.com/capnproto/capnproto/archive/master.tar.gz"
-```
-
-To enforce using the installed Cap'n Proto from the system:
-
-```bash
-pip install . -C force-system-libcapnp=True
-```
-
-The bundling system isn't that smart so it might be necessary to clean up the bundled build when changing versions:
-
-```bash
-python setup.py clean
-```
-
-
-## Stub-file generation
-
-While not directly supported by pycapnp, a tool has been created to help generate pycapnp stubfile to assist with development (this is very helpful if you're new to pypcapnp!). See [#289](https://github.com/capnproto/pycapnp/pull/289#event-9078216721) for more details.
-
-[Python Capnp Stub Generator](https://gitlab.com/mic_public/tools/python-helpers/capnp-stub-generator)
-
-
-## Python Versions
-
-Python 3.9+ is supported.
-
-
-## Development
-
-Git flow has been abandoned, use master.
-
-To test, use a pipenv (or install requirements.txt and run pytest manually).
-```bash
-pip install pipenv
-pipenv install
-pipenv run pytest
-```
-
-
-### Binary Packages
-
-Building a Python wheel distributiion
-
-```bash
-pip wheel .
-```
-
-
-### Releasing to PyPI
-
-Wheels and the sdist are built by the `Build` GitHub Actions workflow
-(`.github/workflows/wheels.yml`) for every push, including tag pushes. The
-`scripts/release-pypi.sh` helper downloads those artifacts for a given tag (or
-explicit run ID) and uploads them to PyPI via `twine`.
-
-Typical release flow:
-
-```bash
-git tag v2.2.1
-git push origin v2.2.1
-# wait for the "Build" workflow run to finish successfully on GitHub
-
-# Download artifacts and upload to PyPI (creates dist_221/ by default).
-scripts/release-pypi.sh v2.2.1
-
-# Or, target a specific Actions run id:
-scripts/release-pypi.sh 1234567890
-
-# Dry run: upload to TestPyPI (https://test.pypi.org) instead of real PyPI.
-# Useful for validating the release flow end-to-end before pushing to
-# production. Requires a TestPyPI account + API token configured in
-# ~/.pypirc under a [testpypi] section. See
-# https://packaging.python.org/en/latest/guides/using-testpypi/ .
-scripts/release-pypi.sh v2.2.1 --test
-```
-
-Requirements on the release machine:
-
-- `gh` CLI, authenticated (`gh auth login`)
-- `python3` (the script creates `.venv-release/` and installs `twine` into it)
-- PyPI credentials available to `twine`, e.g. `TWINE_USERNAME=__token__` and
-  `TWINE_PASSWORD=<api-token>`, or a configured `~/.pypirc`
-
-The script:
-
-1. Resolves the latest successful `wheels.yml` run for the tag (or uses the
-   given run ID).
-2. Downloads `cibw-*` artifacts and flattens all `*.whl` / `*.tar.gz` files
-   into the output directory (default `dist_<digits>` for tags,
-   `dist_run_<id>` for run IDs; pass a second arg to override, and `--force`
-   to reuse a non-empty directory).
-3. Runs `twine check`, prints the file list, and prompts before running
-   `twine upload`.
-
-## Documentation/Example
-
-There is some basic documentation [here](http://capnproto.github.io/pycapnp/).
-
-Make sure to look at the [examples](examples). The examples are generally kept up to date with the recommended usage of the library.
-
-The examples directory has one example that shows off pycapnp quite nicely. Here it is, reproduced:
-
-```python
-import os
-import capnp
-
-import addressbook_capnp
-
-def writeAddressBook(file):
-    addresses = addressbook_capnp.AddressBook.new_message()
-    people = addresses.init('people', 2)
-
-    alice = people[0]
-    alice.id = 123
-    alice.name = 'Alice'
-    alice.email = 'alice@example.com'
-    alicePhones = alice.init('phones', 1)
-    alicePhones[0].number = "555-1212"
-    alicePhones[0].type = 'mobile'
-    alice.employment.school = "MIT"
-
-    bob = people[1]
-    bob.id = 456
-    bob.name = 'Bob'
-    bob.email = 'bob@example.com'
-    bobPhones = bob.init('phones', 2)
-    bobPhones[0].number = "555-4567"
-    bobPhones[0].type = 'home'
-    bobPhones[1].number = "555-7654"
-    bobPhones[1].type = 'work'
-    bob.employment.unemployed = None
-
-    addresses.write(file)
-
-
-def printAddressBook(file):
-    addresses = addressbook_capnp.AddressBook.read(file)
-
-    for person in addresses.people:
-        print(person.name, ':', person.email)
-        for phone in person.phones:
-            print(phone.type, ':', phone.number)
-
-        which = person.employment.which()
-        print(which)
-
-        if which == 'unemployed':
-            print('unemployed')
-        elif which == 'employer':
-            print('employer:', person.employment.employer)
-        elif which == 'school':
-            print('student at:', person.employment.school)
-        elif which == 'selfEmployed':
-            print('self employed')
-        print()
-
-
-if __name__ == '__main__':
-    f = open('example', 'w')
-    writeAddressBook(f)
-
-    f = open('example', 'r')
-    printAddressBook(f)
-```
-
-Also, pycapnp has gained RPC features that include pipelining and a promise style API. Refer to the calculator example in the examples directory for a much better demonstration:
-
-```python
-import asyncio
-import capnp
-import socket
-
-import test_capability_capnp
-
-
-class Server(test_capability_capnp.TestInterface.Server):
-
-    def __init__(self, val=1):
-        self.val = val
-
-    async def foo(self, i, j, **kwargs):
-        return str(i * 5 + self.val)
-
-
-async def client(read_end):
-    client = capnp.TwoPartyClient(read_end)
-
-    cap = client.bootstrap()
-    cap = cap.cast_as(test_capability_capnp.TestInterface)
-
-    remote = cap.foo(i=5)
-    response = await remote
-
-    assert response.x == '125'
-
-async def main():
-    client_end, server_end = socket.socketpair(socket.AF_UNIX)
-    # This is a toy example using socketpair.
-    # In real situations, you can use any socket.
-
-    client_end = await capnp.AsyncIoStream.create_connection(sock=client_end)
-    server_end = await capnp.AsyncIoStream.create_connection(sock=server_end)
-
-    _ = capnp.TwoPartyServer(server_end, bootstrap=Server(100))
-    await client(client_end)
-
-
-if __name__ == '__main__':
-    asyncio.run(capnp.run(main()))
-```
+See [LICENSE.md](LICENSE.md) for the upstream BSD license and attribution.

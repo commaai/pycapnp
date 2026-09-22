@@ -3,7 +3,6 @@
 import subprocess
 import os
 import shutil
-import struct
 import sys
 
 
@@ -14,7 +13,7 @@ def build_libcapnp(bundle_dir, build_dir):  # noqa: C901
     bundle_dir = os.path.abspath(bundle_dir)
     capnp_dir = os.path.join(bundle_dir, "capnproto-c++")
     build_dir = os.path.abspath(build_dir)
-    tmp_dir = os.path.join(capnp_dir, "build{}".format(8 * struct.calcsize("P")))
+    tmp_dir = os.path.join(capnp_dir, "build")
 
     # Clean the tmp build directory every time
     if os.path.exists(tmp_dir):
@@ -28,23 +27,8 @@ def build_libcapnp(bundle_dir, build_dir):  # noqa: C901
 
     # Enable ninja for compilation if available
     build_type = []
-    if shutil.which("ninja") and os.name != "nt":
+    if shutil.which("ninja"):
         build_type = ["-G", "Ninja"]
-
-    # Determine python shell architecture for Windows
-    python_arch = 8 * struct.calcsize("P")
-    build_arch = []
-    build_flags = []
-    if os.name == "nt":
-        if python_arch == 64:
-            build_arch_flag = "x64"
-        elif python_arch == 32:
-            build_arch_flag = "Win32"
-        else:
-            raise RuntimeError("Unknown windows build arch")
-        build_arch = ["-A", build_arch_flag]
-        build_flags = ["--config", "Release"]
-        print("Building module for {}".format(python_arch))
 
     if not shutil.which("cmake"):
         raise RuntimeError("Could not find cmake in your path!")
@@ -54,11 +38,11 @@ def build_libcapnp(bundle_dir, build_dir):  # noqa: C901
         "-DCMAKE_POSITION_INDEPENDENT_CODE=1",
         "-DBUILD_TESTING=OFF",
         "-DBUILD_SHARED_LIBS=OFF",
+        "-DWITH_OPENSSL=OFF",
         "-DCMAKE_INSTALL_PREFIX:PATH={}".format(build_dir),
         capnp_dir,
     ]
     args.extend(build_type)
-    args.extend(build_arch)
     conf = subprocess.Popen(args, cwd=tmp_dir, stdout=sys.stdout)
     returncode = conf.wait()
     if returncode != 0:
@@ -72,7 +56,6 @@ def build_libcapnp(bundle_dir, build_dir):  # noqa: C901
         "--target",
         "install",
     ]
-    args.extend(build_flags)
     build = subprocess.Popen(args, cwd=tmp_dir, stdout=sys.stdout)
     returncode = build.wait()
     if cxxflags is None:

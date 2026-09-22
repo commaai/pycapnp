@@ -53,3 +53,7 @@ example
 
 # capnp files
 *.capnp
+
+.venv/
+.pytest_cache/
+.ruff_cache/
