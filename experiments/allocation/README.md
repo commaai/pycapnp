@@ -28,7 +28,9 @@ Temporary overflow segments are freed, never retained by the pool.
 reports multisegment counts, and randomizes policy order across repeated rounds.
 It compares sizes 64/256/1024/4096/16384, all reuse mechanisms, input-size presizing,
 and a maximum-observed-size per-service policy trained on the first half of a
-separate log. Trained timings include a service-to-factory dictionary lookup;
+separate log (`0.rlog.zst` by default). The output records both input file SHA256
+hashes, whether their contents overlap exactly, and the training subset count.
+Trained timings include a service-to-factory dictionary lookup;
 service names are assumed known by the caller. `from_dict` is an intentionally
 controlled construction comparison, while `public kwargs` runs the actual
 `Event.new_message(**record)` API. `empty` cases are allocator microbenchmarks.
@@ -40,7 +42,10 @@ Exploratory CPU14 measurements (before the final cache-bound correction) showed
 with a 1024-word arena-reset pool, but ~0.49 vs0.33 us for empty messages.
 The full-workload benefit is modest; do not extrapolate the empty-message gain.
 CPU14 shares a physical core with CPU2, so final quiet measurements must replace
-these estimates. Prior sequential sweeps had drift and are not evidence of gains.
+these estimates. Those earlier local trained-policy measurements used the first
+half of the evaluation log itself; they are overlapping-training results, not a
+held-out training result. Final commands below use a separate training segment.
+Prior sequential sweeps had drift and are not evidence of gains.
 
 ## Approach 16: schema compilation and reflection
 
@@ -82,8 +87,8 @@ export PYTHONPATH="$PWD:/home/batman/openpilot"
 PY=/home/batman/openpilot/.venv/bin/python
 $PY experiments/allocation/bench_compiled_workload.py prepare
 
-taskset -c 0 $PY experiments/allocation/bench_allocation.py /tmp/pr3704_logs/1.rlog.zst --repeat 9
-taskset -c 0 $PY experiments/allocation/bench_allocation.py /tmp/opendbc_logs/ascent_1.rlog.zst --repeat 9
+taskset -c 0 $PY experiments/allocation/bench_allocation.py /tmp/pr3704_logs/1.rlog.zst --train /tmp/pr3704_logs/0.rlog.zst --repeat 9
+taskset -c 0 $PY experiments/allocation/bench_allocation.py /tmp/opendbc_logs/ascent_1.rlog.zst --train /tmp/pr3704_logs/0.rlog.zst --repeat 9
 
 taskset -c 0 $PY experiments/allocation/bench_schema.py --repeat 11
 hyperfine --warmup 3 --runs 15 --export-json experiments/allocation/startup.json \
@@ -96,7 +101,8 @@ taskset -c 0 $PY experiments/allocation/bench_compiled_workload.py lazy /tmp/pr3
 ```
 
 Held-out allocation validation passed for all variants on the Ascent log, with
-training fixed to the Subaru log. The unchanged 100-line workload passed all12
+the earlier training fixed to Subaru segment1 (separate from Ascent). Final
+measurements use Subaru segment0 for both evaluation logs. The unchanged 100-line workload passed all12
 cases with lazy compiled schemas in a smoke run. Tests cover alias lifetimes,
 threaded callers under the GIL, cyclic ownership, size validation, overflow,
 failed construction, shared cache bounds, malformed archives, imported-type

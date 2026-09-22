@@ -19,16 +19,27 @@ from openpilot.tools.lib.logreader import LogReader
 parser = argparse.ArgumentParser()
 parser.add_argument('rlog')
 parser.add_argument('--validate-only', action='store_true')
-parser.add_argument('--train', default='/tmp/pr3704_logs/1.rlog.zst')
+parser.add_argument('--train', default='/tmp/pr3704_logs/0.rlog.zst')
 parser.add_argument('--repeat', type=int, default=5)
 args = parser.parse_args()
+if args.repeat < 1:
+    parser.error('--repeat must be positive')
+evaluation_path, training_path = Path(args.rlog).resolve(), Path(args.train).resolve()
+evaluation_sha = hashlib.sha256(evaluation_path.read_bytes()).hexdigest()
+training_sha = hashlib.sha256(training_path.read_bytes()).hexdigest()
+print('evaluation_file', evaluation_path, 'sha256', evaluation_sha)
+print('training_file', training_path, 'sha256', training_sha,
+      'same_file_content_as_evaluation', training_sha == evaluation_sha)
 cases = {}
 def bench(name, operation, count, repeats):
     cases[name] = (operation, count)
 
-events = list(LogReader(args.rlog))
+events = list(LogReader(str(evaluation_path)))
+if not events:
+    parser.error('evaluation log contains no events')
+n = min(1000, len(events))
 first = {m.which(): m for m in reversed(events)}
-selected = [events[i * len(events) // 1000] for i in range(1000)] + list(first.values())
+selected = [events[i * len(events) // n] for i in range(n)] + list(first.values())
 wire = [m.as_builder().to_bytes() for m in selected]
 readers = [messaging.log_from_bytes(b) for b in wire]
 records = [m.to_dict() for m in readers]
@@ -49,9 +60,14 @@ for words in (64, 256, 1024, 4096, 16384):
     pool = capnp.BuilderPool(words, 1)
     factories[f'pool {words}'] = lambda pool=pool: pool.new_message(log.Event.schema)
 
-training = list(LogReader(args.train))
+training = list(LogReader(str(training_path)))
+if not training:
+    parser.error('training log contains no events')
+training_count = max(1, len(training) // 2)
+print('training_total_events', len(training), 'training_subset', f'[0:{training_count}]',
+      'training_subset_count', training_count)
 trained_sizes = {}
-for msg in training[:len(training) // 2]:
+for msg in training[:training_count]:
     kind = msg.which()
     trained_sizes[kind] = max(trained_sizes.get(kind, 1), msg.total_size.word_count + 1)
 print('trained cached buffer bound bytes', sum(trained_sizes.values()) * 8, '(capacity * words * 8; native metadata and live messages extra)')
