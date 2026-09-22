@@ -12,6 +12,7 @@ from capnp.helpers.helpers cimport init_capnp_api
 
 from builtins import memoryview as BuiltinsMemoryview
 from cpython cimport Py_buffer, PyObject_CheckBuffer
+from cpython.ref cimport PyObject, Py_DECREF
 from cpython.buffer cimport PyBUF_SIMPLE, PyBUF_CONTIG_RO
 from cpython.exc cimport PyErr_Clear
 from cython.operator cimport dereference as deref
@@ -1960,3 +1961,54 @@ def remove_import_hook():
 def _init_capnp_api():
     """ Initialize static function pointers for cdef api functions. """
     init_capnp_api()
+
+
+# Cython's default __getattr__ slot constructs an AttributeError for every
+# successful schema field access. Suppress that intermediate exception while
+# preserving normal Python descriptor lookup and the subclass slot behavior.
+cdef extern from "capnp/helpers/fastattr.h":
+    ctypedef object (*CapnpGetAttr)(object, object)
+    CapnpGetAttr installCapnpGetAttr(object, CapnpGetAttr)
+    PyObject* _PyObject_GenericGetAttrWithDict(object, object, PyObject*, int) except? NULL
+
+cdef CapnpGetAttr _original_reader_getattr
+cdef CapnpGetAttr _original_builder_getattr
+
+
+cdef object _reader_getattr(object obj, object name):
+    cdef PyObject* result
+    cdef _DynamicStructReader reader
+    if type(obj) is not _DynamicStructReader:
+        return _original_reader_getattr(obj, name)
+    result = _PyObject_GenericGetAttrWithDict(obj, name, NULL, 1)
+    if result != NULL:
+        value = <object>result
+        Py_DECREF(<object>result)
+        return value
+    reader = obj
+    try:
+        return to_python_reader(reader.thisptr.get(name), reader)
+    except KjException as e:
+        raise e._to_python() from None
+
+
+cdef object _builder_getattr(object obj, object name):
+    cdef PyObject* result
+    cdef _DynamicStructBuilder builder
+    if type(obj) is not _DynamicStructBuilder:
+        return _original_builder_getattr(obj, name)
+    result = _PyObject_GenericGetAttrWithDict(obj, name, NULL, 1)
+    if result != NULL:
+        value = <object>result
+        Py_DECREF(<object>result)
+        return value
+    builder = obj
+    try:
+        return to_python_builder(builder.thisptr.get(name), builder)
+    except KjException as e:
+        raise e._to_python() from None
+
+
+if _os.environ.get("CAPNP_FAST_GETATTR", "1") != "0":
+    _original_reader_getattr = installCapnpGetAttr(_DynamicStructReader, _reader_getattr)
+    _original_builder_getattr = installCapnpGetAttr(_DynamicStructBuilder, _builder_getattr)
