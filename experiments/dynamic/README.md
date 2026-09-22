@@ -123,3 +123,26 @@ CAPNP_PRIMITIVE_IMPORT=0 PYTHONPATH="$PWD:/home/batman/openpilot" taskset -c 2 \
 All `CAPNP_*` switches default on and are experiment ablations, not required
 runtime tuning. No GC disabling is used in timed throughput cases. No change to
 wire format, schema generation, IPC, compression, or openpilot callers is needed.
+
+
+## Native attribute trampoline follow-up
+
+Root-controlled comparisons found small regressions in ordinary method-heavy
+cases (CAN cached conversion, payload assignment, and copy/encode). Disabling
+fast attribute dispatch restored these cases, implicating the Cython slot's
+successful-method return/refcount overhead. Two independent source reviews
+confirmed a native trampoline addresses that mechanism.
+
+Commit `62e4cd7` keeps ordinary attribute lookup and its successful return entirely
+in C++. Only genuine missing schema fields enter Cython. Subclasses delegate to
+the original slot before descriptor lookup. Pending descriptor exceptions retain
+their normal behavior. Installation is idempotent, and unsupported/private-API
+and per-module-state configurations are excluded at compile time.
+
+Forced rebuild validation: **382 tests passed**, another **31 passed with
+CAPNP_FAST_GETATTR=0**, and all three corpus fingerprints match baseline.
+Independent runtime checks covered single descriptor execution, subclass
+fallbacks, non-AttributeError propagation, refcounts, reload, and schema isolation.
+See `trampoline-*.txt/json`; `trampoline-metadata.json` identifies the new binary.
+Earlier `metadata.json` and local timings identify the pre-trampoline experiment.
+Final trampoline timing is deliberately deferred to the root's sequential runs.

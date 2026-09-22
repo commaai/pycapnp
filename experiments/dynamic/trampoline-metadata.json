@@ -1,0 +1,11 @@
+{
+  "commit": "62e4cd7a3ca5e7ab92e1e3b779aa3cd12786ba19",
+  "sha256": "8e4c6b43db9f3c6dee2adfa1c7b5377009fd4ec21014c292d8c4a5622045e017",
+  "python": "3.12.13",
+  "build_log": "/tmp/dynamic-trampoline-build.log",
+  "forced_rebuild": true,
+  "tests": 382,
+  "fastattr_disabled_tests": 31,
+  "corpus_fingerprints": "match baseline original/Ascent/Kona",
+  "independent_review": "source and runtime correctness passed; no benchmarks performed yet"
+}
