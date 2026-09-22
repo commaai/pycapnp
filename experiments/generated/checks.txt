@@ -1,0 +1,4 @@
+generated_native 152 Event arms: PASS
+generated_cython 152 Event arms: PASS
+all uninitialized Cython constructors safely reject access: PASS
+22 reentrant subprocess regressions: PASS

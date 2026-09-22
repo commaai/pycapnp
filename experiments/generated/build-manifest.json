@@ -1,0 +1,62 @@
+{
+  "openpilot_commit": "7f6f13997c3c9b8e27e1581583f61e3fcabc5151",
+  "baseline_commit": "b8ec065b16290deb62e309b0443e6a8ccec23259",
+  "python": "3.12.13",
+  "cython": "3.3.0",
+  "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+  "cpu": "AMD Ryzen Threadripper PRO 5945WX 12-Cores",
+  "cpu_affinity": 8,
+  "schema_sources": {
+    "cereal/custom.capnp": "6b06a0d2d5ac6b902ca2f433c1663ed83ea4b41ba4c16cddfc7acd8a630be82d",
+    "cereal/deprecated.capnp": "b3aa5c13de40001ed7376cef858500fb003f7698f96131cd0db18d878fa1af0d",
+    "cereal/include/c++.capnp": "fb306076cd38c27af1aed20fac6395e9a46fbe5b5df6a248b5f1b6845a079c44",
+    "cereal/log.capnp": "c73421bbebc20f36a0840a2bd56881a1b57ca9ab40abca8f90c61e9b17d4dd00",
+    "opendbc/car/car.capnp": "b971083a0cb3aed287ca9c54572d470fb798e633bc47611717f697b9e735f5a1",
+    "opendbc/car/include/c++.capnp": "fb306076cd38c27af1aed20fac6395e9a46fbe5b5df6a248b5f1b6845a079c44",
+    "opendbc/car/rlog.capnp": "76331a09f36764d08228ba1ed6c03419cc8cdfcc797db98c4d56fab52a6ac050"
+  },
+  "artifacts": {
+    "runtime.h": {
+      "bytes": 8883,
+      "sha256": "e54ccb23642da9bd6f1c1bef3f41a84a590db07c0610ef2cc547be50f20bfffa"
+    },
+    "accessors.h": {
+      "bytes": 1956933,
+      "sha256": "b6f353cb8e9ee6c429e64a1a074eac310ecde33626a25ee95caccbb073e02ce3"
+    },
+    "generated_cython.pyx": {
+      "bytes": 541297,
+      "sha256": "9d91de80432f5f4a96a7ea78e101524914ba881b383b57c05835009a16f62974"
+    },
+    "generated_native.cpp": {
+      "bytes": 608209,
+      "sha256": "9c80c6796f1a97bfe405c6aea48e64419138ed7eaeddd85be29126400028c825"
+    },
+    "generated_consumer.h": {
+      "bytes": 2844,
+      "sha256": "06a313cb458ca4a7e1f115f7c9f8cb4eed91ad7ccaa88c5312779942771b2bcc"
+    },
+    "generated_cython.cpython-312-x86_64-linux-gnu.so": {
+      "bytes": 7654344,
+      "sha256": "e2e5a8e56eb4e5264b1f31d897f8e13c1d841e575b54dd0873cd69d08b24adc4"
+    },
+    "generated_native.cpython-312-x86_64-linux-gnu.so": {
+      "bytes": 5735944,
+      "sha256": "29b72b879463f7fa1b579b4c4b024056b72d508a4dc6750dcee286675a10f787"
+    }
+  },
+  "schema_generation_seconds": 0.11912099190521985,
+  "build_timing_note": "Measured with /usr/bin/time: both extensions -j2 CPUs9,10, existing vendored static archive; includes Cython translation, excludes schema generation/static library compilation.",
+  "source_sha256": {
+    "setup.py": "1512996824e3e309bb0f380ddb6d99cd1dbde1bb888d4bfc078cda9b1ac92cd3",
+    "generate_consumer.py": "eddc0be851b41b5414dd254ac4cfa74ec6b57db1eeeca45224b74cf0c88b4d7e",
+    "ablate.py": "ef3424a182d62b2257349a7f6b636b5f9bc5420ae438db29a9ccd2cda1ab6a55",
+    "generate.py": "eecaeb06f308eb865365180fc0fd1b6f7715e2d552a69113fb8ab5f8abca9a75",
+    "benchmark.py": "ca10009aed57e31720f250074f71b7e2b3141c9fe33d16f628fcf9ef4afdc872",
+    "reentrant.py": "1fe4653387a7790a1bc9ef7f8e8faae3a7bfa9e94bd4648513708b10e21c96fe",
+    "checks.py": "92962076f0c8ecdbb595ff00420383cd209af8d95bf781b67f0b234c8a981f50",
+    "startup.py": "7c987ca4b6667e3aef35f4a8b3a92fd5336616d0d3fe9f974e84ceb3c7851cc5",
+    "runtime.h": "e54ccb23642da9bd6f1c1bef3f41a84a590db07c0610ef2cc547be50f20bfffa"
+  },
+  "final_native_rebuild_seconds": 63.56
+}
