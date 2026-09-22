@@ -233,10 +233,12 @@ cdef class _DynamicListIterator:
         if self.index >= self.size:
             raise StopIteration
         cdef uint index = self.index
-        self.index += 1
         if self.mutable:
-            return to_python_builder(self.builder[index], self.owner)
-        return to_python_reader(self.reader[index], self.owner)
+            value = to_python_builder(self.builder[index], self.owner)
+        else:
+            value = to_python_reader(self.reader[index], self.owner)
+        self.index += 1
+        return value
 
     def __length_hint__(self):
         return self.size - self.index
@@ -629,6 +631,12 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Fie
 
 cdef _fill_native_list(C_DynamicList.Builder msg, values, parent, unsigned int depth=0, plans=None):
     cdef uint i
+    if not values:
+        return
+    value_type = type(values[0])
+    if _use_primitive_import and (value_type is float or value_type is int or value_type is bool):
+        if fillPrimitive(msg, values):
+            return
     if depth >= 512:
         raise RecursionError("capnp conversion exceeds 512 nested containers")
     Py_EnterRecursiveCall(" while converting a capnp message")
@@ -673,6 +681,9 @@ cdef _fill_native_struct(DynamicStruct_Builder msg, dict values, parent, unsigne
 
 cdef extern from "capnp/helpers/conversion.h" namespace "pycapnp_conversion":
     object primitiveList(C_DynamicList.Reader) except +reraise_kj_exception
+    bint fillPrimitive(C_DynamicList.Builder, object) except +reraise_kj_exception
+
+cdef bint _use_primitive_import = _os.environ.get("CAPNP_PRIMITIVE_IMPORT", "1") != "0"
 
 cdef bint _use_primitive_lists = _os.environ.get("CAPNP_PRIMITIVE_LISTS", "1") != "0"
 
@@ -717,17 +728,21 @@ cdef _conversion_cache(C_StructSchema schema):
     return {}
 
 
-cdef bint _use_union_cache = _os.environ.get("CAPNP_UNION_CACHE", "0") == "1"
+cdef bint _use_union_cache = _os.environ.get("CAPNP_UNION_CACHE", "1") != "0"
 cdef _ConversionPlan _last_union_plan = None
 cdef object _last_union_parser = None
+cdef C_StructSchema _last_uncached_union_schema
+cdef bint _has_uncached_union_schema = False
 
 
 cdef _DynamicEnumField _union_value(C_StructSchema schema, C_StructSchema.Field field):
-    global _last_union_plan, _last_union_parser
+    global _last_union_plan, _last_union_parser, _last_uncached_union_schema, _has_uncached_union_schema
     cdef _ConversionPlan plan
     if _use_union_cache:
         if _last_union_plan is not None and _last_union_plan.schema == schema:
             plan = _last_union_plan
+        elif _has_uncached_union_schema and _last_uncached_union_schema == schema:
+            return (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(field)
         else:
             plans = _conversion_cache(schema)
             if _global_schema_parser is not None and plans is (<SchemaParser>_global_schema_parser)._conversion_plans:
@@ -739,6 +754,10 @@ cdef _DynamicEnumField _union_value(C_StructSchema schema, C_StructSchema.Field 
                 _last_union_plan = plan
                 _last_union_parser = _global_schema_parser
             else:
+                # This identity is only a cache-miss hint, never dereferenced.
+                # Address reuse can skip a cache hit but cannot return stale data.
+                _last_uncached_union_schema = schema
+                _has_uncached_union_schema = True
                 return (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(field)
         key = field.getIndex()
         value = plan.union_values.get(key)
@@ -770,9 +789,6 @@ cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose, plans, unsigned i
                 if converted is not None:
                     return converted
             return [_value_to_dict(values[i], verbose, plans, depth + 1) for i in range(values.size())]
-        if kind == capnp.TYPE_ENUM:
-            return <char*>helpers.fixMaybe(value.asEnum().getEnumerant()).getProto().getName().cStr()
-        return to_python_reader(value, None)
     finally:
         Py_LeaveRecursiveCall()
 
@@ -814,27 +830,22 @@ cdef _to_dict(msg, bint verbose):
     if msg_type is _DynamicStructBuilder:
         return _struct_to_dict((<_DynamicStructBuilder>msg).thisptr.asReader(), verbose,
                                _conversion_cache((<_DynamicStructBuilder>msg).thisptr.getSchema()))
-    if msg_type is _DynamicListReader:
-        values = (<_DynamicListReader>msg).thisptr
-        return [_value_to_dict(values[i], verbose, {}) for i in range(values.size())]
-    if msg_type is _DynamicListBuilder:
-        values = (<_DynamicListBuilder>msg).thisptr.asReader()
-        return [_value_to_dict(values[i], verbose, {}) for i in range(values.size())]
+    if msg_type is _DynamicListReader or msg_type is _DynamicListBuilder:
+        if msg_type is _DynamicListReader:
+            values = (<_DynamicListReader>msg).thisptr
+        else:
+            values = (<_DynamicListBuilder>msg).thisptr.asReader()
+        if _use_primitive_lists:
+            converted = primitiveList(values)
+            if converted is not None:
+                return converted
+        plans = {} if _use_conversion_plans else None
+        return [_value_to_dict(values[i], verbose, plans) for i in range(values.size())]
     if isinstance(msg, (_DynamicStructBuilder, _DynamicStructReader)):
         return msg.to_dict(verbose)
     if msg_type is _DynamicEnum:
         return str(msg)
     return msg
-
-
-cdef _from_list(_DynamicListBuilder msg, list d):
-    for i, x in enumerate(d):
-        msg._set(i, x)
-
-
-cdef _from_tuple(_DynamicListBuilder msg, tuple d):
-    for i, x in enumerate(d):
-        msg._set(i, x)
 
 
 cdef class _DynamicEnum:
@@ -2009,7 +2020,8 @@ def _init_capnp_api():
 cdef extern from "capnp/helpers/fastattr.h":
     ctypedef object (*CapnpGetAttr)(object, object)
     CapnpGetAttr installCapnpGetAttr(object, CapnpGetAttr)
-    PyObject* _PyObject_GenericGetAttrWithDict(object, object, PyObject*, int) except? NULL
+    bint supportsCapnpFastGetAttr()
+    PyObject* optionalCapnpGetAttr(object, object) except? NULL
 
 cdef CapnpGetAttr _original_reader_getattr
 cdef CapnpGetAttr _original_builder_getattr
@@ -2020,7 +2032,7 @@ cdef object _reader_getattr(object obj, object name):
     cdef _DynamicStructReader reader
     if type(obj) is not _DynamicStructReader:
         return _original_reader_getattr(obj, name)
-    result = _PyObject_GenericGetAttrWithDict(obj, name, NULL, 1)
+    result = optionalCapnpGetAttr(obj, name)
     if result != NULL:
         value = <object>result
         Py_DECREF(<object>result)
@@ -2037,18 +2049,18 @@ cdef object _builder_getattr(object obj, object name):
     cdef _DynamicStructBuilder builder
     if type(obj) is not _DynamicStructBuilder:
         return _original_builder_getattr(obj, name)
-    result = _PyObject_GenericGetAttrWithDict(obj, name, NULL, 1)
+    result = optionalCapnpGetAttr(obj, name)
     if result != NULL:
         value = <object>result
         Py_DECREF(<object>result)
         return value
     builder = obj
     try:
-        return to_python_builder(builder.thisptr.get(name), builder)
+        return to_python_builder(builder.thisptr.get(name), builder._parent)
     except KjException as e:
         raise e._to_python() from None
 
 
-if _os.environ.get("CAPNP_FAST_GETATTR", "1") != "0":
+if supportsCapnpFastGetAttr() and _os.environ.get("CAPNP_FAST_GETATTR", "1") != "0":
     _original_reader_getattr = installCapnpGetAttr(_DynamicStructReader, _reader_getattr)
     _original_builder_getattr = installCapnpGetAttr(_DynamicStructBuilder, _builder_getattr)
