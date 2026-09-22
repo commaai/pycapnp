@@ -218,6 +218,29 @@ cdef class _NestedNodeReader:
             return <char*>self.thisptr.getName().cStr()
 
 
+cdef class _DynamicListIterator:
+    cdef C_DynamicList.Reader reader
+    cdef C_DynamicList.Builder builder
+    cdef object owner
+    cdef uint index, size
+    cdef bint mutable
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index >= self.size:
+            raise StopIteration
+        cdef uint index = self.index
+        self.index += 1
+        if self.mutable:
+            return to_python_builder(self.builder[index], self.owner)
+        return to_python_reader(self.reader[index], self.owner)
+
+    def __length_hint__(self):
+        return self.size - self.index
+
+
 cdef class _DynamicListReader:
     """Class for reading Cap'n Proto Lists
 
@@ -250,8 +273,17 @@ cdef class _DynamicListReader:
         cdef uint size = self.thisptr.size()
         if index >= size:
             raise IndexError('Out of bounds')
-        index = index % size
+        if index < 0:
+            index = index % size
         return self._get(index)
+
+    def __iter__(self):
+        cdef _DynamicListIterator iterator = _DynamicListIterator.__new__(_DynamicListIterator)
+        iterator.reader = self.thisptr
+        iterator.owner = self._parent
+        iterator.size = self.thisptr.size()
+        iterator.mutable = False
+        return iterator
 
     def __len__(self):
         return self.thisptr.size()
@@ -296,7 +328,8 @@ cdef class _DynamicListBuilder:
         cdef uint size = self.thisptr.size()
         if index >= size:
             raise IndexError('Out of bounds')
-        index = index % size
+        if index < 0:
+            index = index % size
         return self._get(index)
 
     cpdef _set(self, index, value):
@@ -308,6 +341,14 @@ cdef class _DynamicListBuilder:
             raise IndexError('Out of bounds')
         index = index % size
         _setDynamicField(self.thisptr, index, value, self._parent)
+
+    def __iter__(self):
+        cdef _DynamicListIterator iterator = _DynamicListIterator.__new__(_DynamicListIterator)
+        iterator.builder = self.thisptr
+        iterator.owner = self._parent
+        iterator.size = self.thisptr.size()
+        iterator.mutable = True
+        return iterator
 
     def __len__(self):
         return self.thisptr.size()
@@ -365,11 +406,11 @@ cdef to_python_reader(C_DynamicValue.Reader self, object parent):
         temp_data = self.asData()
         return <bytes>((<char*>temp_data.begin())[:temp_data.size()])
     elif type == capnp.TYPE_LIST:
-        return _DynamicListReader()._init(self.asList(), parent)
+        return (<_DynamicListReader>_DynamicListReader.__new__(_DynamicListReader))._init(self.asList(), parent)
     elif type == capnp.TYPE_STRUCT:
-        return _DynamicStructReader()._init(self.asStruct(), parent)
+        return (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(self.asStruct(), parent)
     elif type == capnp.TYPE_ENUM:
-        return _DynamicEnum()._init(self.asEnum(), parent)
+        return (<_DynamicEnum>_DynamicEnum.__new__(_DynamicEnum))._init(self.asEnum(), parent)
     elif type == capnp.TYPE_VOID:
         return None
     elif type == capnp.TYPE_UNKNOWN:
@@ -395,11 +436,11 @@ cdef to_python_builder(C_DynamicValue.Builder self, object parent):
         temp_data = self.asData()
         return <bytes>((<char*>temp_data.begin())[:temp_data.size()])
     elif type == capnp.TYPE_LIST:
-        return _DynamicListBuilder()._init(self.asList(), parent)
+        return (<_DynamicListBuilder>_DynamicListBuilder.__new__(_DynamicListBuilder))._init(self.asList(), parent)
     elif type == capnp.TYPE_STRUCT:
-        return _DynamicStructBuilder()._init(self.asStruct(), parent)
+        return (<_DynamicStructBuilder>_DynamicStructBuilder.__new__(_DynamicStructBuilder))._init(self.asStruct(), parent)
     elif type == capnp.TYPE_ENUM:
-        return _DynamicEnum()._init(self.asEnum(), parent)
+        return (<_DynamicEnum>_DynamicEnum.__new__(_DynamicEnum))._init(self.asEnum(), parent)
     elif type == capnp.TYPE_VOID:
         return None
     elif type == capnp.TYPE_UNKNOWN:
@@ -649,7 +690,7 @@ cdef class _ConversionPlan:
             self.names.append(<char*>fields[i].getProto().getName().cStr())
         all_fields = schema.getFields()
         for i in range(all_fields.size()):
-            self.by_name[<char*>all_fields[i].getProto().getName().cStr()] = _StructSchemaField()._init(all_fields[i])
+            self.by_name[<char*>all_fields[i].getProto().getName().cStr()] = (<_StructSchemaField>_StructSchemaField.__new__(_StructSchemaField))._init(all_fields[i])
         return self
 
 
@@ -673,6 +714,10 @@ cdef _value_to_dict(C_DynamicValue.Reader value, bint verbose, plans, unsigned i
     cdef int kind = value.getType()
     cdef C_DynamicList.Reader values
     cdef uint i
+    if kind != capnp.TYPE_STRUCT and kind != capnp.TYPE_LIST:
+        if kind == capnp.TYPE_ENUM:
+            return <char*>helpers.fixMaybe(value.asEnum().getEnumerant()).getProto().getName().cStr()
+        return to_python_reader(value, None)
     if depth >= 512:
         raise RecursionError("capnp conversion exceeds 512 nested containers")
     Py_EnterRecursiveCall(" while converting a capnp message")
@@ -896,7 +941,7 @@ cdef class _DynamicStructReader:
         :Raises: :exc:`KjException` if this struct doesn't contain a union
         """
         try:
-            which = _DynamicEnumField()._init(
+            which = (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(
                 helpers.fixMaybe(self.thisptr.which()))
         except RuntimeError as e:
             if str(e) == "Member was null.":
@@ -1071,7 +1116,7 @@ cdef class _DynamicStructBuilder:
         :Raises: :exc:`KjException` if this struct doesn't contain a union
         """
         try:
-            which = _DynamicEnumField()._init(
+            which = (<_DynamicEnumField>_DynamicEnumField.__new__(_DynamicEnumField))._init(
                 helpers.fixMaybe(self.thisptr.which()))
         except RuntimeError as e:
             if str(e) == "Member was null.":
@@ -1100,7 +1145,7 @@ cdef class _DynamicStructBuilder:
         :rtype: :class:`_DynamicStructReader`
         """
         cdef _DynamicStructReader reader
-        reader = _DynamicStructReader()._init(
+        reader = (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(
             self.thisptr.asReader(), self._parent, self.is_root)
         reader._obj_to_pin = self
         return reader
@@ -1175,7 +1220,7 @@ cdef class _Schema:
     property node:
         """The raw schema node"""
         def __get__(self):
-            return _DynamicStructReader()._init(self.thisptr.getProto(), self)
+            return (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(self.thisptr.getProto(), self)
 
 
 cdef class _StructSchema(_Schema):
@@ -1233,7 +1278,7 @@ cdef class _StructSchema(_Schema):
             fieldlist = self._thisptr().getFields()
             nfields = fieldlist.size()
             self.__fields = {
-                <char*>fieldlist[i].getProto().getName().cStr(): _StructSchemaField()._init(fieldlist[i], self)
+                <char*>fieldlist[i].getProto().getName().cStr(): (<_StructSchemaField>_StructSchemaField.__new__(_StructSchemaField))._init(fieldlist[i], self)
                 for i in xrange(nfields)
             }
             return self.__fields
@@ -1241,7 +1286,7 @@ cdef class _StructSchema(_Schema):
     property node:
         """The raw schema node"""
         def __get__(self):
-            return _DynamicStructReader()._init(self._thisptr().getProto(), self)
+            return (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(self._thisptr().getProto(), self)
 
     def __repr__(self):
         return '<schema for %s>' % self.node.displayName
@@ -1268,7 +1313,7 @@ cdef class _StructSchemaField:
     property proto:
         """The raw schema proto"""
         def __get__(self):
-            return _DynamicStructReader()._init(self.thisptr.getProto(), self)
+            return (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(self.thisptr.getProto(), self)
 
     property schema:
         """The schema of this field, or None if it's a type without a schema"""
@@ -1300,7 +1345,7 @@ cdef class _EnumSchema:
     property node:
         """The raw schema node"""
         def __get__(self):
-            return _DynamicStructReader()._init(self.thisptr.getProto(), self)
+            return (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(self.thisptr.getProto(), self)
 
 
 cdef class _ListSchema:
@@ -1601,7 +1646,7 @@ cdef class _MessageBuilder:
         else:
             s = schema
         ptr = s._thisptr()
-        return _DynamicStructBuilder()._init(self.thisptr.initRootDynamicStruct(ptr), self, True)
+        return (<_DynamicStructBuilder>_DynamicStructBuilder.__new__(_DynamicStructBuilder))._init(self.thisptr.initRootDynamicStruct(ptr), self, True)
 
     cpdef get_root(self, schema):
         """A method for instantiating Cap'n Proto structs, from an already pre-written buffer
@@ -1627,7 +1672,7 @@ cdef class _MessageBuilder:
         else:
             s = schema
         ptr = s._thisptr()
-        return _DynamicStructBuilder()._init(self.thisptr.getRootDynamicStruct(ptr), self, True)
+        return (<_DynamicStructBuilder>_DynamicStructBuilder.__new__(_DynamicStructBuilder))._init(self.thisptr.getRootDynamicStruct(ptr), self, True)
 
     cpdef set_root(self, value):
         """A method for instantiating Cap'n Proto structs by copying from an existing struct
@@ -1697,7 +1742,7 @@ cdef class _MessageReader:
         else:
             s = schema
         ptr = s._thisptr()
-        return _DynamicStructReader()._init(self.thisptr.getRootDynamicStruct(ptr), self)
+        return (<_DynamicStructReader>_DynamicStructReader.__new__(_DynamicStructReader))._init(self.thisptr.getRootDynamicStruct(ptr), self)
 
 cdef class _MultipleBytesMessageReader:
     cdef Py_ssize_t offset, sz

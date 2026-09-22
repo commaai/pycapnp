@@ -56,3 +56,38 @@ def test_recursive_input_is_guarded(schema):
 def test_recursive_verbose_defaults_are_guarded(schema):
     with pytest.raises(RecursionError):
         schema.TestAllTypes.new_message().to_dict(verbose=True)
+
+
+def test_iterator_pins_message_and_preserves_mutability(schema):
+    msg = schema.TestAllTypes.new_message(structList=[{"textField": "one"}, {"textField": "two"}])
+    iterator = iter(msg.structList)
+    del msg
+    gc.collect()
+    one = next(iterator)
+    one.textField = "changed"
+    assert one.textField == "changed"
+    two = next(iterator)
+    with pytest.raises(StopIteration):
+        next(iterator)
+    with pytest.raises(StopIteration):
+        next(iterator)
+    del iterator
+    gc.collect()
+    assert two.textField == "two"
+
+
+def test_empty_and_numeric_iterators(schema):
+    msg = schema.TestAllTypes.new_message(int32List=[1, 2, 3])
+    assert list(msg.int32List) == [1, 2, 3]
+    assert list(msg.as_reader().int32List) == [1, 2, 3]
+    assert list(msg.textList) == []
+
+
+def test_attribute_lookup_preserves_methods_and_missing_errors(schema):
+    msg = schema.TestAllTypes.new_message(int32Field=7)
+    for value in (msg, msg.as_reader()):
+        assert value.int32Field == 7
+        assert callable(value.to_dict)
+        assert value.schema.fieldnames
+        with pytest.raises(AttributeError):
+            value.notAField
