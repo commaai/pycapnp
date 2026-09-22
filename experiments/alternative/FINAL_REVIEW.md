@@ -32,7 +32,7 @@ Native CarState/plan/CAN writer medians are 0.062/0.247/0.940 µs on the origina
 
 Correctness scope remains explicit: five supported read projections and three specialized writers, not a general codec. Readers reject some malformed inputs accepted by libcapnp: 312 original-route and 305 held-out mutations out of 10,000. No sampled input accepted by the direct reader was rejected by the library control. The isolated timing comparison concerns successful inputs, not identical parser semantics. The prior adversarial, mutation, full-message writer, schema validation, and sanitizer evidence remains applicable.
 
-Sources: [original backend control](../results/backend-control-route.txt), [held-out backend control](../results/backend-control-heldout.txt), [original projections](../results/alternative-route.txt), [held-out projections](../results/alternative-heldout.txt).
+Sources: [original backend control](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/backend-control-route.txt), [held-out backend control](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/backend-control-heldout.txt), [original projections](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/alternative-route.txt), [held-out projections](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/alternative-heldout.txt).
 
 ## 18. Runtime schema compilation
 
@@ -46,7 +46,7 @@ Fresh-process hyperfine means over 15 runs, including shared harness imports:
 
 On this host, runtime compilation adds approximately 377 ms cold and 4 ms cached relative to prebuilt loading. The cold series retains a 558.8 ms outlier, explicitly reported by hyperfine; it does not alter the conclusion. Warm machine code is identical to prebuilt code, so this experiment establishes deployment/cache costs, not an additional execution speedup. It is schema-specialized C compilation on demand, not an adaptive tracing JIT.
 
-Sources: [startup output](../results/jit-startup.txt), [all hyperfine samples](../results/jit-startup.json).
+Sources: [startup output](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/jit-startup.txt), [all hyperfine samples](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/jit-startup.json).
 
 ## 19. Alternative binding frameworks
 
@@ -63,7 +63,7 @@ The pattern reproduces across both corpora. Direct CPython wins for individual c
 
 ## Final regression commands
 
-Root can run these after the quiet performance queue. They compile the small experiment kernel, so they were not rerun during this read-only review. The existing openpilot environment supplies CFFI; pybind11 is unnecessary for these regression scripts.
+Root ran all four regression scripts after the quiet performance queue; all passed. They compile the small experiment kernel, so they were not rerun during this read-only review. The existing openpilot environment supplies CFFI; pybind11 is unnecessary for these regression scripts.
 
 ```sh
 cd /tmp/capnp-speed/alternative
