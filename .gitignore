@@ -8,8 +8,6 @@
 *.egg-info
 dist
 build
-build32
-build64
 eggs
 parts
 bin
@@ -47,7 +45,6 @@ docs/_build
 capnp/lib/capnp.cpp
 capnp/lib/capnp.h
 capnp/lib/capnp_api.h
-bundled/
 example
 *.iml
 
@@ -57,3 +54,6 @@ example
 .venv/
 .pytest_cache/
 .ruff_cache/
+
+# Source for the trimmed bootstrap schema.
+!vendor/capnproto/src/**/*.capnp

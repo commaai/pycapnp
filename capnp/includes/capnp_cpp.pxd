@@ -136,7 +136,7 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             bint has(char *) except +reraise_kj_exception
             StructSchema getSchema()
             Maybe[StructSchema.Field] which()
-            MessageSize totalSize()
+            MessageSize totalSize() except +reraise_kj_exception
 
     cdef cppclass DynamicStruct_Builder" ::capnp::DynamicStruct::Builder" nogil:
         # Need to flatten this class out, since nested C++ classes cause havoc with cython fused types
@@ -152,7 +152,7 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
         StructSchema getSchema()
         Maybe[StructSchema.Field] which()
         DynamicStruct.Reader asReader()
-        MessageSize totalSize()
+        MessageSize totalSize() except +reraise_kj_exception
 
 cdef extern from "capnp/dynamic.h" namespace " ::capnp":
     cdef cppclass DynamicEnum nogil:
@@ -214,4 +214,4 @@ cdef extern from "capnp/schema-parser.h" namespace " ::capnp":
         ParsedSchema getNested(char * name) except +reraise_kj_exception
     cdef cppclass SchemaParser nogil:
         SchemaParser()
-        ParsedSchema parseDiskFile(char * displayName, char * diskPath, ArrayPtr[StringPtr] importPath)
+        ParsedSchema parseDiskFile(char * displayName, char * diskPath, ArrayPtr[StringPtr] importPath) except +reraise_kj_exception

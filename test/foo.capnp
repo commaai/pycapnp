@@ -14,7 +14,3 @@ struct Baz{
 struct Qux{
     id @0 :UInt64;
 }
-
-interface Wrapper  {
-    wrapped @0 (object :AnyPointer);
-}

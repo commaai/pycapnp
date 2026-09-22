@@ -23,7 +23,6 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: python -m pytest {project}/test
-          CIBW_CONFIG_SETTINGS: force-bundled-libcapnp=true
           CMAKE_OSX_ARCHITECTURES: "${{ runner.os == 'macOS' && matrix.arch || '' }}"
       - uses: actions/upload-artifact@v6
         with:

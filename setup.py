@@ -3,24 +3,17 @@
 pycapnp distutils setup.py
 """
 
-import glob
 import os
 import shutil
-import struct
-import sys
-
-import pkgconfig
-import setuptools  # noqa: F401
 
 from distutils.command.clean import clean as _clean
 
 from setuptools import setup, Extension
 
 _this_dir = os.path.dirname(__file__)
-sys.path.insert(1, _this_dir)
 
-from buildutils.build import build_libcapnp
-from buildutils.bundle import fetch_libcapnp
+import subprocess
+from pathlib import Path
 
 MAJOR = 2
 MINOR = 2
@@ -72,10 +65,7 @@ class clean(_clean):
             os.path.join("capnp", "lib", "capnp.h"),
             os.path.join("capnp", "version.py"),
             "build",
-            "build32",
-            "build64",
-            "bundled",
-        ] + glob.glob(os.path.join("capnp", "*.capnp")):
+        ]:
             print("removing %s" % x)
             try:
                 os.remove(x)
@@ -91,76 +81,32 @@ class build_libcapnp_ext(build_ext_c):
     Build capnproto library
     """
 
-    user_options = build_ext_c.user_options + [
-        ("force-bundled-libcapnp", None, "Bundle capnp library into the installer"),
-        ("force-system-libcapnp", None, "Use system capnp library"),
-        ("libcapnp-url=", "u", "URL to download libcapnp from (only if bundled)"),
-    ]
-
-    def initialize_options(self):
-        build_ext_c.initialize_options(self)
-        self.force_bundled_libcapnp = None
-        self.force_system_libcapnp = None
-        self.libcapnp_url = None
-
-    def run(self):  # noqa: C901
-        if self.force_bundled_libcapnp:
-            need_build = True
-        elif self.force_system_libcapnp:
-            need_build = False
-        else:
-            # Try to use capnp executable to find include and lib path
-            capnp_executable = shutil.which("capnp")
-            if capnp_executable:
-                capnp_dir = os.path.dirname(capnp_executable)
-                self.include_dirs += [os.path.join(capnp_dir, "..", "include")]
-                self.library_dirs += [os.path.join(capnp_dir, "..", "lib{}".format(8 * struct.calcsize("P")))]
-                self.library_dirs += [os.path.join(capnp_dir, "..", "lib")]
-
-            # Look for capnproto using pkg-config (and minimum version)
-            try:
-                if pkgconfig.installed("capnp", ">= 0.7.0"):
-                    need_build = False
-                else:
-                    need_build = True
-            except EnvironmentError:
-                # pkg-config not available in path
-                need_build = True
-
-        if need_build:
-            print(
-                "*WARNING* no libcapnp detected or rebuild forced. "
-                "Attempting to build it from source now. "
-                "If you have C++ Cap'n Proto installed, it may be out of date or is not being detected. "
-                "This may take a while..."
-            )
-            bundle_dir = os.path.join(_this_dir, "bundled")
-            if not os.path.exists(bundle_dir):
-                os.mkdir(bundle_dir)
-            build_dir = os.path.join(_this_dir, "build{}".format(8 * struct.calcsize("P")))
-            if not os.path.exists(build_dir):
-                os.mkdir(build_dir)
-
-            # Check if we've already built capnproto
-            capnp_bin = os.path.join(build_dir, "bin", "capnp")
-
-            if not os.path.exists(capnp_bin):
-                # Not built, fetch and build
-                fetch_libcapnp(bundle_dir, self.libcapnp_url)
-                build_libcapnp(bundle_dir, build_dir)
-            else:
-                print("capnproto already built at {}".format(build_dir))
-
-            self.include_dirs = [os.path.join(build_dir, "include")] + self.include_dirs
-            self.library_dirs = [
-                os.path.join(build_dir, "lib{}".format(8 * struct.calcsize("P"))),
-                os.path.join(build_dir, "lib"),
-            ] + self.library_dirs
-
+    def run(self):
+        source = Path(_this_dir, "vendor", "capnproto").resolve()
+        build = Path(self.build_temp, "capnproto").resolve()
+        args = [
+            "cmake",
+            "-S",
+            str(source),
+            "-B",
+            str(build),
+            "-DCMAKE_BUILD_TYPE=Release",
+        ]
+        if os.environ.get("CMAKE_OSX_ARCHITECTURES"):
+            args.append("-DCMAKE_OSX_ARCHITECTURES=" + os.environ["CMAKE_OSX_ARCHITECTURES"])
+        if os.environ.get("MACOSX_DEPLOYMENT_TARGET"):
+            args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=" + os.environ["MACOSX_DEPLOYMENT_TARGET"])
+        subprocess.run(args, check=True)
+        subprocess.run(["cmake", "--build", str(build), "--parallel", str(self.parallel or 2)], check=True)
+        archive = str(build / "libcapnp-vendored.a")
+        for extension in self.extensions:
+            extension.include_dirs.insert(0, str(source / "src"))
+            extension.extra_objects = [archive]
+            extension.depends = [str(p) for p in source.rglob("*") if p.is_file()] + [archive]
         return build_ext_c.run(self)
 
 
-extra_compile_args = ["--std=c++14"]
+extra_compile_args = ["-std=c++17", "-pthread"]
 import Cython.Build  # noqa: E402
 import Cython  # noqa: E402
 
@@ -172,6 +118,7 @@ extensions = [
             "capnp/lib/*.pyx",
         ],
         extra_compile_args=extra_compile_args,
+        extra_link_args=["-pthread"],
         language="c++",
     )
 ]
@@ -203,7 +150,8 @@ setup(
     description="A cython wrapping of the C++ Cap'n Proto library",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    license="BSD-2-Clause",
+    license="BSD-2-Clause AND MIT",
+    license_files=["LICENSE.md", "vendor/capnproto/LICENSE.txt"],
     # (setup.py only supports 1 author...)
     author="Jacob Alexander",  # <- Current maintainer; Original author -> Jason Paryani
     author_email="haata@kiibohd.com",

@@ -34,22 +34,23 @@ not be installed alongside another distribution providing `capnp`.
 
 ## Build and test
 
-Targets: CPython 3.12, Linux x86_64/aarch64, and macOS arm64. A C++14 compiler and
-CMake are required for a bundled build.
+Targets: CPython 3.12, Linux x86_64/aarch64, and macOS arm64. A C++17 compiler and
+CMake are required to build the vendored library.
 
 ```sh
 uv venv --python 3.12
-uv pip install cython setuptools wheel pkgconfig pytest build
-.venv/bin/python setup.py build_ext --inplace --force-bundled-libcapnp
+uv pip install cython setuptools wheel pytest build
+.venv/bin/python setup.py build_ext --inplace
 .venv/bin/python -m pytest
-.venv/bin/python -m build -Cforce-bundled-libcapnp=true
+.venv/bin/python -m build
 ```
 
-The existing build fallback downloads Cap'n Proto 1.4.0. The extension links only
-`capnpc`, `capnp`, and `kj`; it does not link `capnp-rpc` or `kj-async`. `capnpc` is
-needed for runtime schema parsing. Owning/vendoring the C++ source itself is a
-separate step. To use a system installation, pass `--force-system-libcapnp` to
-`build_ext` (or `-Cforce-system-libcapnp=true` to the wheel build).
+The C++ library is vendored under [`vendor/capnproto`](vendor/capnproto), based on
+Cap'n Proto 1.4.0. Every build compiles and statically links this copy; it does not
+search for a system Cap'n Proto installation or download sources. The source
+archive includes the vendored files, and wheels contain the compiled library.
+Runtime schema parsing remains included, so cereal schemas need no generated
+Python bindings. See the vendor README for provenance and the removed features.
 
 The retained upstream tests cover message construction, schema loading,
 reflection, binary fixtures, serialization, and exceptions. Added lifetime tests

@@ -1,7 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel", "pkgconfig", "cython>=3.0"]
-build-backend = "backend"
-backend-path = ["_custom_build"]
+requires = ["setuptools", "wheel", "cython>=3.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycapnp"
@@ -18,7 +17,7 @@ dynamic = [
 dependencies = []
 
 [dependency-groups]
-dev = ["cython>=3.0", "setuptools", "wheel", "pkgconfig", "build", {include-group = "test"}, {include-group = "lint"}]
+dev = ["cython>=3.0", "setuptools", "wheel", "build", {include-group = "test"}, {include-group = "lint"}]
 test = ["pytest"]
 lint = ["ruff==0.16.8"]
 
@@ -28,7 +27,7 @@ testpaths = ["test"]
 [tool.ruff]
 target-version = "py312"
 line-length = 120
-exclude = ["build", "build64", "bundled"]
+exclude = ["build", "vendor"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]

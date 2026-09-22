@@ -72,7 +72,7 @@ cdef extern from "capnp/message.h" namespace " ::capnp":
     cdef cppclass MessageBuilder nogil:
         DynamicStruct_Builder getRootDynamicStruct 'getRoot< ::capnp::DynamicStruct>'(StructSchema) except +reraise_kj_exception
         DynamicStruct_Builder initRootDynamicStruct 'initRoot< ::capnp::DynamicStruct>'(StructSchema)
-        void setRootDynamicStruct 'setRoot< ::capnp::DynamicStruct::Reader>'(DynamicStruct.Reader)
+        void setRootDynamicStruct 'setRoot< ::capnp::DynamicStruct::Reader>'(DynamicStruct.Reader) except +reraise_kj_exception
 
     cdef cppclass MessageReader nogil:
         DynamicStruct.Reader getRootDynamicStruct 'getRoot< ::capnp::DynamicStruct>'(StructSchema) except +reraise_kj_exception

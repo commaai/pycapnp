@@ -1,6 +1,5 @@
 # capnp.pyx
 # distutils: language = c++
-# distutils: libraries = capnpc capnp kj
 # distutils: include_dirs = .
 # cython: c_string_type = str
 # cython: c_string_encoding = default
@@ -1382,7 +1381,6 @@ cdef class SchemaParser:
             self._last_import_array = importArray
 
         ret = _ParsedSchema()
-        # TODO (HaaTa): Convert to parseFromDirectory() as per deprecation note
         ret._init_child(self.thisptr.parseDiskFile(displayName, diskPath, importArray.asArrayPtr()))
 
         return ret
