@@ -34,10 +34,10 @@ used the first41,290 of82,580 events from Subaru segment0, SHA256
 Evaluation used Subaru segment1 and the Ascent route, with different input hashes
 recorded in the outputs. Trained timings include service-to-factory lookup.
 
-Raw evidence: [route](../results/allocation-route.txt),
-[held-out](../results/allocation-heldout.txt),
-[route provenance](../results/allocation-route.run.json),
-[held-out provenance](../results/allocation-heldout.run.json).
+Raw evidence: [route](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/allocation-route.txt),
+[held-out](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/allocation-heldout.txt),
+[route provenance](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/allocation-route.run.json),
+[held-out provenance](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/allocation-heldout.run.json).
 
 The implementation covers first-segment buffers, native object storage, and
 complete single-segment arena reuse with bounded caches and last-alias ownership.
@@ -64,9 +64,9 @@ with warm filesystem caches, not cold storage, and the harness is not all of
 openpilot startup. Artifact creation includes file writes without fsync. The
 source schemas and dependencies must trigger explicit archive regeneration.
 
-Raw evidence: [internal timings and reflection](../results/schema-startup.txt),
-[hyperfine output](../results/schema-hyperfine.txt),
-[hyperfine individual samples](../results/schema-hyperfine.json).
+Raw evidence: [internal timings and reflection](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/schema-startup.txt),
+[hyperfine output](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/schema-hyperfine.txt),
+[hyperfine individual samples](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/schema-hyperfine.json).
 
 Repeated WebRTC reflection with independent mutable result containers fell from
 307.77 to7.23us (approximately42.6×) using the declaration-keyed cache. The first
@@ -84,8 +84,8 @@ kwargs run was unstable (44.26us median,30.45–52.95us range, versus eager29.60
 these isolated unpaired runs do not establish an inherent regression or gain.
 The supported speed claims are startup and explicitly cached reflection.
 
-Raw evidence: [eager unchanged workload](../results/schema-eager.txt),
-[lazy unchanged workload](../results/schema-lazy.txt).
+Raw evidence: [eager unchanged workload](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/schema-eager.txt),
+[lazy unchanged workload](https://github.com/commaai/pycapnp/blob/faster-python/experiments/results/schema-lazy.txt).
 
 Final assessment: both bounded approaches are implemented and benchmarked.
 Allocator reuse is a modest optional optimization on these workloads. Schema
