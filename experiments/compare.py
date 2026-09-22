@@ -46,6 +46,11 @@ def main():
     script = Path(__file__).resolve().parents[1] / "benchmarks/bench_openpilot.py"
     result = {
         "host": platform.platform(), "cpu": args.cpu, "script_sha256": digest(script),
+        "python": args.python,
+        "openpilot_commit": subprocess.check_output(
+            ["git", "-C", str(args.openpilot), "rev-parse", "HEAD"], text=True).strip(),
+        "tuning_environment": {k: v for k, v in os.environ.items()
+                               if k.startswith(("CAPNP_", "PYCAPNP_", "PYTHON"))},
         "rlog": str(args.rlog.resolve()), "rlog_sha256": digest(args.rlog),
         "implementations": {name: identity(path) for name, path in paths.items()},
         "runs": [],
