@@ -21,6 +21,7 @@ from libcpp.utility cimport move
 
 
 import contextlib
+import operator as _operator
 import base64
 import enum as _enum
 import os as _os
@@ -738,7 +739,22 @@ cdef class _MessageSize:
 
 
 def _struct_reducer(schema_id, data):
-    with _global_schema_parser.modules_by_id[schema_id].from_bytes(data) as msg:
+    module = None
+    if _global_schema_parser is not None:
+        module = _global_schema_parser.modules_by_id.get(schema_id)
+    if module is None:
+        for owner in _compiled_schema_owners:
+            module = owner.modules_by_id.get(schema_id)
+            if module is None:
+                try:
+                    module = _StructModule(owner.get(schema_id).as_struct())
+                except KjException:
+                    continue
+                owner.modules_by_id[schema_id] = module
+            break
+    if module is None:
+        raise KeyError(schema_id)
+    with module.from_bytes(data) as msg:
         return msg
 
 
@@ -1385,6 +1401,11 @@ cdef class SchemaParser:
 
         return ret
 
+    def export_schemas(self):
+        """Snapshot loaded schemas, including dependencies, for load_compiled()."""
+        cdef schema_cpp.WordArray data = exportSchemas(deref(self.thisptr))
+        return <bytes>((<char*>data.begin())[:data.size() * 8])
+
     def load(self, file_name, display_name=None, imports=[]):
         """Load a Cap'n Proto schema from a file
 
@@ -1418,32 +1439,6 @@ cdef class SchemaParser:
             - :exc:`KjException` if the Cap'n Proto C++ library has any problems loading the schema
 
         """
-        def _load(nodeSchema, module):
-            module._nodeSchema = nodeSchema
-            nodeProto = nodeSchema.get_proto()
-            module._nodeProto = nodeProto
-
-            self.modules_by_id[nodeProto.id] = module
-
-            for node in nodeProto.nestedNodes:
-                local_module = _ModuleType(node.name)
-
-                schema = nodeSchema.get_nested(node.name)
-                proto = schema.get_proto()
-                if proto.isStruct:
-                    local_module = _StructModule(schema.as_struct())
-
-                    module.__dict__[node.name] = local_module
-                elif proto.isConst:
-                    module.__dict__[node.name] = schema.as_const_value()
-                elif proto.isInterface:
-                    continue
-                elif proto.isEnum:
-                    local_module = _EnumModule(schema.as_enum())
-
-                    module.__dict__[node.name] = local_module
-
-                _load(schema, local_module)
         if not _os.path.isfile(file_name):
             raise IOError("File not found: " + file_name)
 
@@ -1464,7 +1459,7 @@ cdef class SchemaParser:
             if _os.path.isdir(imp):
                 filtered_imports.append(imp)
         fileSchema = parser._parse_disk_file(display_name, file_name, filtered_imports)
-        _load(fileSchema, module)
+        _populate_module(self, fileSchema, module)
 
         abs_path = _os.path.abspath(file_name)
         module.__path__ = [_os.path.dirname(abs_path)]
@@ -1565,8 +1560,14 @@ cdef class _MallocMessageBuilder(_MessageBuilder):
         ...
         data = person.to_bytes()
     """
-    def __init__(self):
-        self.thisptr = new schema_cpp.MallocMessageBuilder()
+    def __init__(self, first_segment_words=None):
+        if first_segment_words is None:
+            self.thisptr = new schema_cpp.MallocMessageBuilder(1024)
+            return
+        first_segment_words = _operator.index(first_segment_words)
+        if not 0 < first_segment_words < 2**29:
+            raise ValueError("first_segment_words must be between 1 and 2**29 - 1")
+        self.thisptr = new schema_cpp.MallocMessageBuilder(first_segment_words)
 
 
 cdef class _MessageReader:
@@ -1821,3 +1822,181 @@ def remove_import_hook():
 def _init_capnp_api():
     """ Initialize static function pointers for cdef api functions. """
     init_capnp_api()
+
+
+cdef extern from "capnp/helpers/arena_pool.h" namespace "pycapnp":
+    cdef cppclass ArenaPool:
+        ArenaPool(unsigned int, unsigned int, bint, bint) except +reraise_kj_exception
+        schema_cpp.MessageBuilder* acquire() except +reraise_kj_exception
+        void release(schema_cpp.MessageBuilder*)
+        size_t cachedBufferBytes()
+
+
+cdef class BuilderPool:
+    """Bounded first-segment pool. Buffers return only after all message aliases die.
+
+    Pool capacity limits cached buffers, not the number of live messages. Oversized
+    messages fall back to normal allocation for additional segments.
+    """
+    cdef ArenaPool* pool
+
+    def __cinit__(self, first_segment_words=1024, capacity=8, recycle_builder=False, reset_arena=False):
+        first_segment_words = _operator.index(first_segment_words)
+        capacity = _operator.index(capacity)
+        if not 0 < first_segment_words < 2**29 or not 0 <= capacity <= 65536:
+            raise ValueError("invalid pool size or capacity")
+        self.pool = new ArenaPool(first_segment_words, capacity, recycle_builder, reset_arena)
+
+    def __dealloc__(self):
+        del self.pool
+
+    @property
+    def cached_buffer_bytes(self):
+        return self.pool.cachedBufferBytes()
+
+    def new_message(self, schema, **kwargs):
+        cdef _PooledMessageOwner owner = _PooledMessageOwner.__new__(_PooledMessageOwner)
+        owner.pool_owner = self
+        owner.thisptr = self.pool.acquire()
+        result = owner.init_root(schema)
+        result.from_dict(kwargs)
+        return result
+
+def _populate_module(parser, nodeSchema, module):
+    module._nodeSchema = nodeSchema
+    nodeProto = nodeSchema.get_proto()
+    module._nodeProto = nodeProto
+
+    parser.modules_by_id[nodeProto.id] = module
+
+    for node in nodeProto.nestedNodes:
+        local_module = _ModuleType(node.name)
+
+        schema = nodeSchema.get_nested(node.name)
+        proto = schema.get_proto()
+        if proto.isStruct:
+            local_module = _StructModule(schema.as_struct())
+
+            module.__dict__[node.name] = local_module
+        elif proto.isConst:
+            module.__dict__[node.name] = schema.as_const_value()
+        elif proto.isInterface:
+            continue
+        elif proto.isEnum:
+            local_module = _EnumModule(schema.as_enum())
+
+            module.__dict__[node.name] = local_module
+
+        _populate_module(parser, schema, local_module)
+
+
+cdef extern from "capnp/helpers/schema_archive.h" namespace "pycapnp":
+    schema_cpp.WordArray exportSchemas(C_SchemaParser&) except +reraise_kj_exception
+    cdef cppclass SchemaArchive:
+        SchemaArchive(const char*, size_t) except +reraise_kj_exception
+        C_Schema get(uint64_t) except +reraise_kj_exception
+
+
+cdef class _CompiledNode(_Schema):
+    cdef object archive
+
+    def get_nested(self, name):
+        for node in self.node.nestedNodes:
+            if node.name == name:
+                return self.archive.get(node.id)
+        raise KeyError(name)
+
+
+cdef class _CompiledSchemas:
+    """Loaded immutable schema archive; keep alive for every dependent message."""
+    cdef SchemaArchive* archive
+    cdef public dict modules_by_id
+
+    def __cinit__(self, bytes data):
+        self.archive = new SchemaArchive(data, len(data))
+        self.modules_by_id = {}
+
+    def __dealloc__(self):
+        del self.archive
+
+    def get(self, uint64_t schema_id):
+        cdef _CompiledNode node = _CompiledNode()
+        node._init(self.archive.get(schema_id))
+        node.archive = self
+        return node
+
+    def load(self, uint64_t schema_id, display_name="compiled", lazy=False):
+        if lazy:
+            return _LazyCompiledModule(display_name, self, self.get(schema_id))
+        module = _ModuleType(display_name)
+        module._parser = self
+        module.schema = self.get(schema_id)
+        _populate_module(self, module.schema, module)
+        return module
+
+
+# Dynamic field schemas do not carry an owning loader in the existing API.
+# Retain compiled loaders just as capnp.load retains the global source parser.
+_compiled_schema_owners = []
+_compiled_schema_cache = {}
+
+
+def load_compiled(bytes data, uint64_t schema_id, display_name="compiled", lazy=False):
+    """Load an explicit precompiled snapshot (no automatic source invalidation).
+
+    Archives are retained for process lifetime, like the global source parser.
+    Generate a new archive whenever any source schema or dependency changes.
+    """
+    global _global_schema_parser
+    owner = _compiled_schema_cache.get(data)
+    if owner is None:
+        owner = _CompiledSchemas(data)
+        module = owner.load(schema_id, display_name, lazy)
+        _compiled_schema_owners.append(owner)
+        _compiled_schema_cache[data] = owner
+    else:
+        module = owner.load(schema_id, display_name, lazy)
+    return module
+
+
+class _LazyCompiledModule(_ModuleType):
+    """Optional lazy file namespace; dir() exposes unloaded declarations."""
+    def __init__(self, name, owner, node):
+        super().__init__(name)
+        self._parser = owner
+        self.schema = self._nodeSchema = node
+        self._nodeProto = node.get_proto()
+        self._nested = {entry.name: entry.id for entry in node.node.nestedNodes}
+        owner.modules_by_id[node.node.id] = self
+
+    def __getattr__(self, name):
+        if name not in self._nested:
+            raise AttributeError(name)
+        node = self._parser.get(self._nested[name])
+        proto = node.get_proto()
+        if proto.isStruct:
+            module = _StructModule(node.as_struct())
+        elif proto.isEnum:
+            module = _EnumModule(node.as_enum())
+        elif proto.isConst:
+            value = node.as_const_value()
+            setattr(self, name, value)
+            return value
+        else:
+            module = _ModuleType(name)
+        _populate_module(self._parser, node, module)
+        setattr(self, name, module)
+        return module
+
+    def __dir__(self):
+        return sorted(set(super().__dir__()) | set(self._nested))
+
+
+@cython.no_gc_clear
+cdef class _PooledMessageOwner(_MessageBuilder):
+    cdef BuilderPool pool_owner
+
+    def __dealloc__(self):
+        if self.thisptr != NULL:
+            self.pool_owner.pool.release(self.thisptr)
+            self.thisptr = NULL

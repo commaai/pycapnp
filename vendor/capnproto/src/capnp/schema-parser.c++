@@ -272,6 +272,10 @@ ParsedSchema SchemaParser::parseDiskFile(
       *baseDir, kj::mv(path), translatedImportPath, kj::str(displayName)));
 }
 
+kj::Array<Schema> SchemaParser::getAllLoaded() const {
+  return impl->compiler.getLoader().getAllLoaded();
+}
+
 ParsedSchema SchemaParser::parseFile(kj::Own<SchemaFile>&& file) const {
   KJ_DEFER(impl->compiler.clearWorkspace());
   uint64_t id = impl->compiler.add(getModuleImpl(kj::mv(file))).getId();

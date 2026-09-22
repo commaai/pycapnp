@@ -102,7 +102,9 @@ class build_libcapnp_ext(build_ext_c):
         for extension in self.extensions:
             extension.include_dirs.insert(0, str(source / "src"))
             extension.extra_objects = [archive]
-            extension.depends = [str(p) for p in source.rglob("*") if p.is_file()] + [archive]
+            extension.depends = ([str(p) for p in source.rglob("*") if p.is_file()]
+                                 + [str(p) for p in Path(_this_dir, "capnp", "helpers").glob("*.h")]
+                                 + [archive])
         return build_ext_c.run(self)
 
 

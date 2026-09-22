@@ -78,7 +78,7 @@ cdef extern from "capnp/message.h" namespace " ::capnp":
         DynamicStruct.Reader getRootDynamicStruct 'getRoot< ::capnp::DynamicStruct>'(StructSchema) except +reraise_kj_exception
 
     cdef cppclass MallocMessageBuilder(MessageBuilder) nogil:
-        MallocMessageBuilder()
+        MallocMessageBuilder(uint firstSegmentWords) except +reraise_kj_exception
 
 cdef extern from "capnp/serialize.h" namespace " ::capnp":
     cdef cppclass FlatArrayMessageReader(MessageReader) nogil:

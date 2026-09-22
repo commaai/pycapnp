@@ -61,6 +61,10 @@ AnyPointer::Reader MessageReader::getRootInternal() {
 
 MessageBuilder::MessageBuilder(): allocatedArena(false) {}
 
+bool MessageBuilder::resetSingleSegment() {
+  return !allocatedArena || arena()->resetSingleSegment();
+}
+
 MessageBuilder::~MessageBuilder() noexcept(false) {
   if (allocatedArena) {
     kj::dtor(*arena());

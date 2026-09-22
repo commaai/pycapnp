@@ -148,6 +148,8 @@ class MessageBuilder {
 
 public:
   MessageBuilder();
+  bool resetSingleSegment();
+  // Internal pooling hook. Caller must ensure there are no outstanding aliases.
   virtual ~MessageBuilder() noexcept(false);
   KJ_DISALLOW_COPY_AND_MOVE(MessageBuilder);
 

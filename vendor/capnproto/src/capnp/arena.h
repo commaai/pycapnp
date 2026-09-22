@@ -238,6 +238,9 @@ public:
   KJ_DISALLOW_COPY_AND_MOVE(BuilderArena);
 
   inline SegmentBuilder* getRootSegment() { return &segment0; }
+  bool resetSingleSegment();
+  // Only after every reader, builder, and orphan referring to this arena is dead.
+
 
   kj::ArrayPtr<const kj::ArrayPtr<const word>> getSegmentsForOutput();
   // Get an array of all the segments, suitable for writing out.  This only returns the allocated

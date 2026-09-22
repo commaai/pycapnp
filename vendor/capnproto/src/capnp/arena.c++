@@ -141,6 +141,23 @@ BuilderArena::BuilderArena(MessageBuilder* message)
 
 BuilderArena::~BuilderArena() noexcept(false) {}
 
+bool BuilderArena::resetSingleSegment() {
+  if (moreSegments != nullptr) return false;
+  if (segment0.getArena() == nullptr) return false;
+  auto words = segment0.getArray();
+  auto used = segment0.currentlyAllocated();
+  memset(const_cast<word*>(used.begin()), 0, used.size() * sizeof(word));
+  auto size = segment0.getSize();
+  kj::dtor(segment0);
+  kj::dtor(dummyLimiter);
+  kj::ctor(dummyLimiter);
+  kj::ctor(segment0, this, SegmentId(0), const_cast<word*>(words.begin()), size, &dummyLimiter);
+  segment0.allocate(ONE * WORDS);  // MessageBuilder keeps its root pointer allocated.
+  segment0ForOutput = nullptr;
+  segmentWithSpace = &segment0;
+  return true;
+}
+
 SegmentBuilder* BuilderArena::getSegment(SegmentId id) {
   // This method is allowed to fail if the segment ID is not valid.
   if (id == SegmentId(0)) {

@@ -46,6 +46,8 @@ public:
   // Parse a file from disk. Relative imports and embeds can access paths outside its directory.
   // Absolute schema imports are searched in importPath.
 
+  kj::Array<Schema> getAllLoaded() const;
+
   ParsedSchema parseFile(kj::Own<SchemaFile>&& file) const;
   // Advanced interface for parsing a file that may or may not be located in any global namespace.
   //
