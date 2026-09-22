@@ -146,9 +146,7 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             DynamicValueForward.Reader get(char *) except +reraise_kj_exception
             DynamicValueForward.Reader getByField"get"(StructSchema.Field) except +reraise_kj_exception
             bint has(char *) except +reraise_kj_exception
-            bint hasByField"has"(StructSchema.Field) except +reraise_kj_exception
             StructSchema getSchema()
-            uint64_t getId"getSchema().getProto().getId"()
             Maybe[StructSchema.Field] which()
             MessageSize totalSize()
 
@@ -159,15 +157,11 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
         DynamicValueForward.Builder get(char *) except +reraise_kj_exception
         DynamicValueForward.Builder getByField"get"(StructSchema.Field) except +reraise_kj_exception
         bint has(char *) except +reraise_kj_exception
-        bint hasByField"has"(StructSchema.Field) except +reraise_kj_exception
         void set(char *, DynamicValueForward.Reader) except +reraise_kj_exception
         void setByField"set"(StructSchema.Field, DynamicValueForward.Reader) except +reraise_kj_exception
         DynamicValueForward.Builder init(char *, uint size) except +reraise_kj_exception
         DynamicValueForward.Builder init(char *) except +reraise_kj_exception
-        DynamicValueForward.Builder initByField"init"(StructSchema.Field, uint size) except +reraise_kj_exception
-        DynamicValueForward.Builder initByField"init"(StructSchema.Field) except +reraise_kj_exception
         StructSchema getSchema()
-        uint64_t getId"getSchema().getProto().getId"()
         Maybe[StructSchema.Field] which()
         DynamicStruct.Reader asReader()
         MessageSize totalSize()

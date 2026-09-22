@@ -82,7 +82,6 @@ cdef extern from "capnp/message.h" namespace " ::capnp":
 
     cdef cppclass MallocMessageBuilder(MessageBuilder) nogil:
         MallocMessageBuilder()
-        MallocMessageBuilder(int)
 
 cdef extern from "capnp/serialize.h" namespace " ::capnp":
     cdef cppclass FlatArrayMessageReader(MessageReader) nogil:

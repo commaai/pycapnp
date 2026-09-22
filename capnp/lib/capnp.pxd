@@ -5,7 +5,7 @@ from capnp.includes cimport schema_cpp
 from capnp.includes.capnp_cpp cimport (
     Schema as C_Schema, StructSchema as C_StructSchema,
     EnumSchema as C_EnumSchema, ListSchema as C_ListSchema, DynamicStruct as C_DynamicStruct,
-    DynamicValue as C_DynamicValue, Type as C_Type, DynamicList as C_DynamicList,
+    DynamicValue as C_DynamicValue, DynamicList as C_DynamicList,
     SchemaParser as C_SchemaParser, ParsedSchema as C_ParsedSchema, VOID, ArrayPtr, StringPtr,
     String, StringTree, DynamicStruct_Builder
 )
@@ -47,8 +47,7 @@ cdef class _DynamicStructReader:
     cpdef _DynamicEnumField _which(self)
     cpdef _which_str(self)
     cpdef _get_by_field(self, _StructSchemaField field)
-    cpdef _has_by_field(self, _StructSchemaField field)
-    cpdef as_builder(self, num_first_segment_words=?)
+    cpdef as_builder(self)
 
 
 cdef class _DynamicStructBuilder:
@@ -68,12 +67,10 @@ cdef class _DynamicStructBuilder:
     cpdef init(self, field, size=?)
     cpdef _get_by_field(self, _StructSchemaField field)
     cpdef _set_by_field(self, _StructSchemaField field, value)
-    cpdef _has_by_field(self, _StructSchemaField field)
-    cpdef _init_by_field(self, _StructSchemaField field, size=?)
     cpdef _DynamicEnumField _which(self)
     cpdef _which_str(self)
     cpdef as_reader(self)
-    cpdef copy(self, num_first_segment_words=?)
+    cpdef copy(self)
 
 cdef class _DynamicEnumField:
     cdef object thisptr
@@ -115,10 +112,9 @@ cdef class _MessageBuilder:
     cpdef set_root(self, value)
 cdef to_python_reader(C_DynamicValue.Reader self, object parent)
 cdef to_python_builder(C_DynamicValue.Builder self, object parent)
-cdef _to_dict(msg, bint verbose, bint ordered, bint encode_bytes_as_base64=?)
+cdef _to_dict(msg, bint verbose)
 cdef _from_list(_DynamicListBuilder msg, list d)
 cdef _from_tuple(_DynamicListBuilder msg, tuple d)
 cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField field, value, parent)
-cdef _setDynamicFieldStatic(DynamicStruct_Builder thisptr, field, value, parent)
 
 cdef api object wrap_kj_exception_for_reraise(capnp.Exception & exception) with gil

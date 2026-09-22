@@ -21,7 +21,6 @@ from libc.string cimport memcpy
 from libcpp.utility cimport move
 
 
-import collections as _collections
 import contextlib
 import base64
 import enum as _enum
@@ -162,11 +161,6 @@ cdef schema_cpp.ReaderOptions make_reader_opts(traversal_limit_in_words, nesting
     if nesting_limit is not None:
         opts.nestingLimit = nesting_limit
     return opts
-
-
-ctypedef fused _DynamicStructReaderOrBuilder:
-    _DynamicStructReader
-    _DynamicStructBuilder
 
 
 ctypedef fused _DynamicSetterClasses:
@@ -627,118 +621,55 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField
 
 
 # TODO: Is this function used by anyone? Can it be removed?
-cdef _setDynamicFieldStatic(DynamicStruct_Builder thisptr, field, value, parent):
-    cdef C_DynamicValue.Reader temp
-    value_type = type(value)
-
-    if value_type is int or value_type is long:
-        if value < 0:
-            temp = C_DynamicValue.Reader(<long long>value)
-        else:
-            temp = C_DynamicValue.Reader(<unsigned long long>value)
-        thisptr.set(field, temp)
-    elif value_type is float:
-        temp = C_DynamicValue.Reader(<double>value)
-        thisptr.set(field, temp)
-    elif value_type is bool:
-        temp = C_DynamicValue.Reader(<cbool>value)
-        thisptr.set(field, temp)
-    elif value_type is bytes:
-        _setBytes(thisptr, field, value)
-    elif isinstance(value, basestring):
-        _setBaseString(thisptr, field, value)
-    elif value_type is list:
-        ptr = thisptr.init(field, len(value))
-        builder = to_python_builder(ptr, parent)
-        _from_list(builder, value)
-    elif value_type is dict:
-        ptr = thisptr.get(field)
-        builder = to_python_builder(ptr, parent)
-        builder.from_dict(value)
-    elif value is None:
-        temp = C_DynamicValue.Reader(VOID)
-        thisptr.set(field, temp)
-    elif value_type is _DynamicStructBuilder:
-        thisptr.set(field, _extract_dynamic_struct_builder(value))
-    elif value_type is _DynamicStructReader:
-        thisptr.set(field, _extract_dynamic_struct_reader(value))
-    elif value_type is _DynamicListBuilder:
-        thisptr.set(field, _extract_dynamic_list_builder(value))
-    elif value_type is _DynamicListReader:
-        thisptr.set(field, _extract_dynamic_list_reader(value))
-    elif value_type is _DynamicEnum:
-        thisptr.set(field, _extract_dynamic_enum(value))
-    else:
-        raise KjException(
-            "Tried to set field: '{}' with a value of: '{}' which is an unsupported type: '{}'"
-            .format(field, str(value), str(type(value))))
-
-
 cdef _DynamicListBuilder temp_list_b
 cdef _DynamicListReader temp_list_r
 cdef _DynamicStructBuilder temp_msg_b
 cdef _DynamicStructReader temp_msg_r
 
 
-cdef _to_dict(msg, bint verbose, bint ordered, bint encode_bytes_as_base64=False):
+cdef _to_dict(msg, bint verbose):
     msg_type = type(msg)
     if msg_type is _DynamicListBuilder:
         temp_list_b = msg
-        return [_to_dict(temp_list_b._get(i), verbose, ordered, encode_bytes_as_base64) for i in range(len(msg))]
+        return [_to_dict(temp_list_b._get(i), verbose) for i in range(len(msg))]
     elif msg_type is _DynamicListReader:
         temp_list_r = msg
-        return [_to_dict(temp_list_r._get(i), verbose, ordered, encode_bytes_as_base64) for i in range(len(msg))]
+        return [_to_dict(temp_list_r._get(i), verbose) for i in range(len(msg))]
 
     if msg_type is _DynamicStructBuilder:
         temp_msg_b = msg
-        if ordered:
-            ret = _collections.OrderedDict()
-        else:
-            ret = {}
+        ret = {}
         try:
             which = temp_msg_b.which()
-            ret[which] = _to_dict(temp_msg_b._get(which), verbose, ordered, encode_bytes_as_base64)
+            ret[which] = _to_dict(temp_msg_b._get(which), verbose)
         except KjException:
             pass
 
         for field in temp_msg_b.schema.non_union_fields:
             if verbose or temp_msg_b._has(field):
-                ret[field] = _to_dict(temp_msg_b._get(field), verbose, ordered, encode_bytes_as_base64)
+                ret[field] = _to_dict(temp_msg_b._get(field), verbose)
 
         return ret
     elif msg_type is _DynamicStructReader:
         temp_msg_r = msg
-        if ordered:
-            ret = _collections.OrderedDict()
-        else:
-            ret = {}
+        ret = {}
         try:
             which = temp_msg_r.which()
-            ret[which] = _to_dict(temp_msg_r._get(which), verbose, ordered, encode_bytes_as_base64)
+            ret[which] = _to_dict(temp_msg_r._get(which), verbose)
         except KjException:
             pass
 
         for field in temp_msg_r.schema.non_union_fields:
             if verbose or temp_msg_r._has(field):
-                ret[field] = _to_dict(temp_msg_r._get(field), verbose, ordered, encode_bytes_as_base64)
+                ret[field] = _to_dict(temp_msg_r._get(field), verbose)
 
         return ret
 
     if isinstance(msg, (_DynamicStructBuilder, _DynamicStructReader)):
-        return msg.to_dict(verbose, ordered)
+        return msg.to_dict(verbose)
 
     if msg_type is _DynamicEnum:
         return str(msg)
-
-    if encode_bytes_as_base64 and msg_type is bytes:
-        # encode the message as base64 and return utf-8 string
-        return base64.b64encode(msg).decode('utf-8')
-
-    if msg_type is memoryview:
-        if encode_bytes_as_base64:
-            return base64.b64encode(bytes(msg)).decode('utf-8')
-        else:
-            return bytes(msg)
 
     return msg
 
@@ -890,9 +821,6 @@ cdef class _DynamicStructReader:
     cpdef _has(self, field):
         return self.thisptr.has(field)
 
-    cpdef _has_by_field(self, _StructSchemaField field):
-        return self.thisptr.hasByField(field.thisptr)
-
     cpdef _which_str(self):
         try:
             return <char *>helpers.fixMaybe(self.thisptr.which()).getProto().getName().cStr()
@@ -946,21 +874,18 @@ cdef class _DynamicStructReader:
     def __repr__(self):
         return '<%s reader %s>' % (self.schema.node.displayName, <char*>strStructReader(self.thisptr).cStr())
 
-    def to_dict(self, verbose=False, ordered=False, encode_bytes_as_base64=False):
-        return _to_dict(self, verbose, ordered, encode_bytes_as_base64)
+    def to_dict(self, verbose=False):
+        return _to_dict(self, verbose)
 
-    cpdef as_builder(self, num_first_segment_words=None):
+    cpdef as_builder(self):
         """A method for casting this Reader to a Builder
 
         This is a copying operation with respect to the message's buffer.
         Changes in the new builder will not reflect in the original reader.
 
-        :type num_first_segment_words: int
-        :param num_first_segment_words: Size of the first segment to allocate (in words ie. 8 byte increments)
-
         :rtype: :class:`_DynamicStructBuilder`
         """
-        builder = _MallocMessageBuilder(num_first_segment_words)
+        builder = _MallocMessageBuilder()
         return builder.set_root(self)
 
     property total_size:
@@ -1055,9 +980,6 @@ cdef class _DynamicStructBuilder:
     cpdef _has(self, field):
         return self.thisptr.has(field)
 
-    cpdef _has_by_field(self, _StructSchemaField field):
-        return self.thisptr.hasByField(field.thisptr)
-
     cpdef init(self, field, size=None):
         """Method for initializing fields that are of type union/struct/list
 
@@ -1080,28 +1002,6 @@ cdef class _DynamicStructBuilder:
             return to_python_builder(ptr, self._parent)
         else:
             ptr = self.thisptr.init(field, size)
-            return to_python_builder(ptr, self._parent)
-
-    cpdef _init_by_field(self, _StructSchemaField field, size=None):
-        """Method for initializing fields that are of type union/struct/list
-
-        Typically, you don't have to worry about initializing structs/unions, so this method is mainly for lists.
-
-        :type field: str
-        :param field: The field name to initialize
-
-        :type size: int
-        :param size: The size of the list to initiialize. This should be None for struct/union initialization.
-
-        :rtype: :class:`_DynamicStructBuilder` or :class:`_DynamicListBuilder`
-
-        :Raises: :exc:`KjException` if the field isn't in this struct
-        """
-        if size is None:
-            ptr = self.thisptr.initByField(field.thisptr)
-            return to_python_builder(ptr, self._parent)
-        else:
-            ptr = self.thisptr.initByField(field.thisptr, size)
             return to_python_builder(ptr, self._parent)
 
     cpdef _which_str(self):
@@ -1155,18 +1055,15 @@ cdef class _DynamicStructBuilder:
         reader._obj_to_pin = self
         return reader
 
-    cpdef copy(self, num_first_segment_words=None):
+    cpdef copy(self):
         """A method for copying this Builder
 
         This is a copying operation with respect to the message's buffer.
         Changes in the new builder will not reflect in the original reader.
 
-        :type num_first_segment_words: int
-        :param num_first_segment_words: Size of the first segment to allocate (in words ie. 8 byte increments)
-
         :rtype: :class:`_DynamicStructBuilder`
         """
-        builder = _MallocMessageBuilder(num_first_segment_words)
+        builder = _MallocMessageBuilder()
         return builder.set_root(self)
 
     property schema:
@@ -1185,8 +1082,8 @@ cdef class _DynamicStructBuilder:
     def __repr__(self):
         return '<%s builder %s>' % (self.schema.node.displayName, <char*>strStructBuilder(self.thisptr).cStr())
 
-    def to_dict(self, verbose=False, ordered=False, encode_bytes_as_base64=False):
-        return _to_dict(self, verbose, ordered, encode_bytes_as_base64)
+    def to_dict(self, verbose=False):
+        return _to_dict(self, verbose)
 
     def from_dict(self, dict d):
         for key, val in d.iteritems():
@@ -1415,15 +1312,9 @@ cdef class _ParsedSchema(_Schema):
         return _ParsedSchema()._init_child(self.thisptr_child.getNested(name))
 
 
-class _StructABCMeta(type):
-    """A metaclass for the Type.Reader and Type.Builder ABCs."""
-    def __instancecheck__(cls, obj):
-        return isinstance(obj, cls.__base__) and obj.schema == cls._schema
-
-
-cdef _new_message(self, kwargs, num_first_segment_words):
+cdef _new_message(self, kwargs):
     cdef _MessageBuilder builder
-    builder = _MallocMessageBuilder(num_first_segment_words)
+    builder = _MallocMessageBuilder()
     msg = builder.init_root(self.schema)
     if kwargs is not None:
         msg.from_dict(kwargs)
@@ -1458,14 +1349,6 @@ class _StructModule(object):
                     sub_module = _StructModuleWhich("StructModuleWhich", mapping)
                     setattr(sub_module, 'schema', raw_schema)
                 setattr(self, name, sub_module)
-        if schema.union_fields and not schema.non_union_fields:
-            mapping = []
-            for union_field in schema.node.struct.fields:
-                name = union_field.name
-                name = name[0].upper() + name[1:]
-                mapping.append((name, union_field.discriminantValue))
-            sub_module = _StructModuleWhich("StructModuleWhich", mapping)
-            setattr(self, 'Union', sub_module)
 
     def read_multiple_bytes(self, buf, traversal_limit_in_words=None, nesting_limit=None):
         """Returns an iterable, that when traversed will return Readers for messages.
@@ -1485,7 +1368,7 @@ class _StructModule(object):
         return reader
 
     @contextlib.contextmanager
-    def from_bytes(self, buf, traversal_limit_in_words=None, nesting_limit=None, builder=False):
+    def from_bytes(self, buf, traversal_limit_in_words=None, nesting_limit=None):
         """Returns a Reader for the unpacked object in buf.
 
         :type buf: buffer
@@ -1498,33 +1381,21 @@ class _StructModule(object):
         :type nesting_limit: int
         :param nesting_limit: Limits how many total words of data are allowed to be traversed. Default is 64.
 
-        :type builder: bool
-        :param builder: If true, return a builder object.
-
-        Enabling `builder` returns a writable copy of the message.
-
-        :rtype: :class:`_DynamicStructReader` or :class:`_DynamicStructBuilder`
+        :rtype: :class:`_DynamicStructReader`
         """
         message = None
         try:
-            if builder:
-                message = _FlatArrayMessageReader(buf, traversal_limit_in_words, nesting_limit)
-                yield message.get_root(self.schema).as_builder()
-            else:
-                message = _FlatArrayMessageReader(buf, traversal_limit_in_words, nesting_limit)
-                yield message.get_root(self.schema)
+            message = _FlatArrayMessageReader(buf, traversal_limit_in_words, nesting_limit)
+            yield message.get_root(self.schema)
         finally:
             if message:
                 message.close()
 
-    def __call__(self, num_first_segment_words=None, **kwargs):
-        return self.new_message(num_first_segment_words=num_first_segment_words, **kwargs)
+    def __call__(self, **kwargs):
+        return self.new_message(**kwargs)
 
-    def new_message(self, num_first_segment_words=None, **kwargs):
+    def new_message(self, **kwargs):
         """Returns a newly allocated builder message.
-
-        :type num_first_segment_words: int
-        :param num_first_segment_words: Size of the first segment to allocate (in words ie. 8 byte increments)
 
         :type kwargs: dict
         :param kwargs: A list of fields and their values to initialize in the struct.
@@ -1534,7 +1405,7 @@ class _StructModule(object):
 
         :rtype: :class:`_DynamicStructBuilder`
         """
-        return _new_message(self, kwargs, num_first_segment_words)
+        return _new_message(self, kwargs)
 
 
 class _EnumModule(object):
@@ -1640,27 +1511,6 @@ cdef class SchemaParser:
                 proto = schema.get_proto()
                 if proto.isStruct:
                     local_module = _StructModule(schema.as_struct(), node.name)
-
-                    class Reader(_DynamicStructReader):
-                        """An abstract base class.  Readers are 'instances' of this class."""
-                        __metaclass__ = _StructABCMeta
-                        __slots__ = []
-                        _schema = local_module.schema
-
-                        def __new__(self):
-                            raise TypeError('This is an abstract base class')
-
-                    class Builder(_DynamicStructBuilder):
-                        """An abstract base class.  Builders are 'instances' of this class."""
-                        __metaclass__ = _StructABCMeta
-                        __slots__ = []
-                        _schema = local_module.schema
-
-                        def __new__(self):
-                            raise TypeError('This is an abstract base class')
-
-                    local_module.Reader = Reader
-                    local_module.Builder = Builder
 
                     module.__dict__[node.name] = local_module
                 elif proto.isConst:
@@ -1794,11 +1644,8 @@ cdef class _MallocMessageBuilder(_MessageBuilder):
         ...
         data = person.to_bytes()
     """
-    def __init__(self, size=None):
-        if size is None:
-            self.thisptr = new schema_cpp.MallocMessageBuilder()
-        else:
-            self.thisptr = new schema_cpp.MallocMessageBuilder(size)
+    def __init__(self):
+        self.thisptr = new schema_cpp.MallocMessageBuilder()
 
 
 cdef class _MessageReader:

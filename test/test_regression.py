@@ -143,16 +143,15 @@ def test_addressbook(addressbook):
 def test_addressbook_explicit_fields(addressbook):
     def writeAddressBook(file):
         addresses = addressbook.AddressBook.new_message()
-        address_fields = addressbook.AddressBook.schema.fields
         person_fields = addressbook.Person.schema.fields
         phone_fields = addressbook.Person.PhoneNumber.schema.fields
-        people = addresses._init_by_field(address_fields["people"], 2)
+        people = addresses.init("people", 2)
 
         alice = people[0]
         alice._set_by_field(person_fields["id"], 123)
         alice._set_by_field(person_fields["name"], "Alice")
         alice._set_by_field(person_fields["email"], "alice@example.com")
-        alicePhones = alice._init_by_field(person_fields["phones"], 1)
+        alicePhones = alice.init("phones", 1)
         alicePhones[0]._set_by_field(phone_fields["number"], "555-1212")
         alicePhones[0]._set_by_field(phone_fields["type"], "mobile")
         employment = alice._get_by_field(person_fields["employment"])
@@ -162,7 +161,7 @@ def test_addressbook_explicit_fields(addressbook):
         bob._set_by_field(person_fields["id"], 456)
         bob._set_by_field(person_fields["name"], "Bob")
         bob._set_by_field(person_fields["email"], "bob@example.com")
-        bobPhones = bob._init_by_field(person_fields["phones"], 2)
+        bobPhones = bob.init("phones", 2)
         bobPhones[0]._set_by_field(phone_fields["number"], "555-4567")
         bobPhones[0]._set_by_field(phone_fields["type"], "home")
         bobPhones[1]._set_by_field(phone_fields["number"], "555-7654")
@@ -438,18 +437,6 @@ def check_all_types(reader):
 
 def test_build(all_types):
     root = all_types.TestAllTypes.new_message()
-    init_all_types(root)
-    expectedText = open(os.path.join(this_dir, "all-types.txt"), "r", encoding="utf8").read()
-    assert str(root) + "\n" == expectedText
-
-
-def test_build_first_segment_size(all_types):
-    root = all_types.TestAllTypes.new_message(1)
-    init_all_types(root)
-    expectedText = open(os.path.join(this_dir, "all-types.txt"), "r", encoding="utf8").read()
-    assert str(root) + "\n" == expectedText
-
-    root = all_types.TestAllTypes.new_message(1024 * 1024)
     init_all_types(root)
     expectedText = open(os.path.join(this_dir, "all-types.txt"), "r", encoding="utf8").read()
     assert str(root) + "\n" == expectedText

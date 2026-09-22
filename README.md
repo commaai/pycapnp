@@ -21,6 +21,10 @@ packed serialization, file-descriptor I/O, segment APIs, borrowed Data views,
 custom allocators, orphans/resizable lists, AnyPointer wrappers, type registration,
 the Python schema import hook, and the Cython code generator. Their examples,
 tests, docs, dependencies, and unsupported-platform CI were removed too.
+Also removed are generated per-schema `Reader`/`Builder` classes, synthetic
+`.Union` enums, `_has_by_field`/`_init_by_field`, allocation-size overrides,
+`from_bytes(builder=True)`, and `to_dict` ordering/base64 options. Incoming base64
+Data values in `from_dict` remain supported.
 `remove_import_hook()` remains a no-op for cereal/opendbc compatibility.
 
 This is intentionally not a full upstream API replacement. The import and

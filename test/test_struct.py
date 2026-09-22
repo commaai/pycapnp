@@ -206,30 +206,24 @@ def test_set_dict_union(addressbook):
 
 
 def test_union_enum(all_types):
-    assert all_types.UnionAllTypes.Union.UnionStructField1 == 0
-    assert all_types.UnionAllTypes.Union.UnionStructField2 == 1
 
     msg = all_types.UnionAllTypes.new_message(**{"unionStructField1": {"textField": "foo"}})
-    assert msg.which == all_types.UnionAllTypes.Union.UnionStructField1
     assert msg.which == "unionStructField1"
     assert msg.which == 0
 
     msg = all_types.UnionAllTypes.new_message(**{"unionStructField2": {"textField": "foo"}})
-    assert msg.which == all_types.UnionAllTypes.Union.UnionStructField2
     assert msg.which == "unionStructField2"
     assert msg.which == 1
 
-    assert all_types.GroupedUnionAllTypes.Union.G1 == 0
-    assert all_types.GroupedUnionAllTypes.Union.G2 == 1
-
     msg = all_types.GroupedUnionAllTypes.new_message(**{"g1": {"unionStructField1": {"textField": "foo"}}})
-    assert msg.which == all_types.GroupedUnionAllTypes.Union.G1
+    assert msg.which() == "g1"
 
     msg = all_types.GroupedUnionAllTypes.new_message(**{"g2": {"unionStructField2": {"textField": "foo"}}})
-    assert msg.which == all_types.GroupedUnionAllTypes.Union.G2
+    assert msg.which() == "g2"
 
     msg = all_types.UnionAllTypes.new_message()
-    msg.unionStructField2 = msg.init(all_types.UnionAllTypes.Union.UnionStructField2)
+    msg.init("unionStructField2")
+    assert msg.which() == "unionStructField2"
 
 
 def isstr(s):
@@ -258,14 +252,11 @@ def test_to_dict_verbose(addressbook):
 
     assert person.to_dict(verbose=True)["phones"] == []
 
-    if sys.version_info >= (2, 7):
-        assert person.to_dict(verbose=True, ordered=True)["phones"] == []
-
     with pytest.raises(KeyError):
         assert person.to_dict()["phones"] == []
 
 
-def test_to_dict_ordered(addressbook):
+def test_to_dict_field_order(addressbook):
     person = addressbook.Person.new_message(
         **{
             "name": "Alice",
@@ -276,17 +267,7 @@ def test_to_dict_ordered(addressbook):
         }
     )
 
-    if sys.version_info >= (2, 7):
-        assert list(person.to_dict(ordered=True).keys()) == [
-            "id",
-            "name",
-            "email",
-            "phones",
-            "employment",
-        ]
-    else:
-        with pytest.raises(Exception):
-            person.to_dict(ordered=True)
+    assert list(person.to_dict().keys()) == ["id", "name", "email", "phones", "employment"]
 
 
 def test_nested_list(addressbook):
