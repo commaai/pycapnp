@@ -42,6 +42,7 @@ cdef extern from "capnp/schema.capnp.h" namespace " ::capnp::schema":
     cdef cppclass Field nogil:
         cppclass Reader nogil:
             Text.Reader getName()
+            uint16_t getDiscriminantValue()
 
     cdef cppclass Enumerant nogil:
         cppclass Reader nogil:

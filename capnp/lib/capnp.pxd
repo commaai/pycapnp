@@ -29,6 +29,7 @@ cdef class _StringArrayPtr:
 cdef class SchemaParser:
     cdef C_SchemaParser * thisptr
     cdef public dict modules_by_id
+    cdef dict _conversion_plans
     cdef list _all_imports
     cdef _StringArrayPtr _last_import_array
     cpdef _parse_disk_file(self, displayName, diskPath, imports)
@@ -71,9 +72,10 @@ cdef class _DynamicStructBuilder:
     cpdef copy(self)
 
 cdef class _DynamicEnumField:
-    cdef object thisptr
+    cdef object name
+    cdef uint16_t discriminant
 
-    cdef _init(self, proto)
+    cdef _init(self, C_StructSchema.Field field)
     cpdef _str(self)
 
 cdef class _Schema:
@@ -111,8 +113,6 @@ cdef class _MessageBuilder:
 cdef to_python_reader(C_DynamicValue.Reader self, object parent)
 cdef to_python_builder(C_DynamicValue.Builder self, object parent)
 cdef _to_dict(msg, bint verbose)
-cdef _from_list(_DynamicListBuilder msg, list d)
-cdef _from_tuple(_DynamicListBuilder msg, tuple d)
-cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField field, value, parent)
+cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value, parent, unsigned int depth=?, plans=?)
 
 cdef api object wrap_kj_exception_for_reraise(capnp.Exception & exception) with gil
