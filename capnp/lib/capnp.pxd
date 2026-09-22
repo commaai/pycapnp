@@ -115,6 +115,6 @@ cdef to_python_builder(C_DynamicValue.Builder self, object parent)
 cdef _to_dict(msg, bint verbose)
 cdef _from_list(_DynamicListBuilder msg, list d)
 cdef _from_tuple(_DynamicListBuilder msg, tuple d)
-cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value, parent, unsigned int depth=?)
+cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value, parent, unsigned int depth=?, plans=?)
 
 cdef api object wrap_kj_exception_for_reraise(capnp.Exception & exception) with gil

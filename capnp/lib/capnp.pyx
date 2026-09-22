@@ -482,7 +482,7 @@ cdef _setBaseStringField(DynamicStruct_Builder thisptr, C_StructSchema.Field fie
     thisptr.setByField(field, temp)
 
 
-cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent, unsigned int depth=0):
+cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent, unsigned int depth=0, plans=None):
     cdef C_DynamicValue.Reader temp
     cdef C_DynamicValue.Builder ptr
     value_type = type(value)
@@ -507,17 +507,17 @@ cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent, unsig
         _setBaseString(thisptr, field, value)
     elif value_type is list:
         ptr = thisptr.init(field, len(value))
-        _fill_native_list(ptr.asList(), value, parent, depth + 1)
+        _fill_native_list(ptr.asList(), value, parent, depth + 1, plans)
     elif value_type is tuple:
         ptr = thisptr.init(field, len(value))
-        _fill_native_list(ptr.asList(), value, parent, depth + 1)
+        _fill_native_list(ptr.asList(), value, parent, depth + 1, plans)
     elif value_type is dict:
         if _DynamicSetterClasses is DynamicStruct_Builder:
             ptr = thisptr.get(field)
-            _fill_native_struct(ptr.asStruct(), value, parent, depth + 1)
+            _fill_native_struct(ptr.asStruct(), value, parent, depth + 1, plans)
         else:
             ptr = thisptr[field]
-            _fill_native_struct(ptr.asStruct(), value, parent, depth + 1)
+            _fill_native_struct(ptr.asStruct(), value, parent, depth + 1, plans)
     elif value is None:
         temp = C_DynamicValue.Reader(VOID)
         thisptr.set(field, temp)
@@ -537,7 +537,7 @@ cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent, unsig
             .format(field, str(value), str(type(value))))
 
 
-cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value, parent, unsigned int depth=0):
+cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Field field, value, parent, unsigned int depth=0, plans=None):
     cdef C_DynamicValue.Reader temp
     cdef C_DynamicValue.Builder ptr
     value_type = type(value)
@@ -562,10 +562,10 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Fie
         _setBaseStringField(thisptr, field, value)
     elif value_type is list or value_type is tuple:
         ptr = thisptr.initByField(field, len(value))
-        _fill_native_list(ptr.asList(), value, parent, depth + 1)
+        _fill_native_list(ptr.asList(), value, parent, depth + 1, plans)
     elif value_type is dict:
         ptr = thisptr.getByField(field)
-        _fill_native_struct(ptr.asStruct(), value, parent, depth + 1)
+        _fill_native_struct(ptr.asStruct(), value, parent, depth + 1, plans)
     elif value is None:
         temp = C_DynamicValue.Reader(VOID)
         thisptr.setByField(field, temp)
@@ -585,39 +585,49 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, C_StructSchema.Fie
             .format(<char*>field.getProto().getName().cStr(), str(value), str(type(value))))
 
 
-cdef _fill_native_list(C_DynamicList.Builder msg, values, parent, unsigned int depth=0):
+cdef _fill_native_list(C_DynamicList.Builder msg, values, parent, unsigned int depth=0, plans=None):
     cdef uint i
     if depth >= 512:
         raise RecursionError("capnp conversion exceeds 512 nested containers")
     Py_EnterRecursiveCall(" while converting a capnp message")
     try:
         for i in range(len(values)):
-            _setDynamicField(msg, i, values[i], parent, depth)
+            _setDynamicField(msg, i, values[i], parent, depth, plans)
     finally:
         Py_LeaveRecursiveCall()
 
-cdef _fill_native_struct(DynamicStruct_Builder msg, dict values, parent, unsigned int depth=0):
-    cdef C_StructSchema.Field field
+cdef _fill_native_struct(DynamicStruct_Builder msg, dict values, parent, unsigned int depth=0, plans=None):
+    cdef C_StructSchema.Field field, active
+    cdef C_StructSchema schema = msg.getSchema()
+    cdef _ConversionPlan plan = None
+    cdef _StructSchemaField planned_field
     if depth >= 512:
         raise RecursionError("capnp conversion exceeds 512 nested containers")
+    if plans is not None:
+        key = schema.hashCode()
+        plan = plans.get(key)
+        if plan is None or not (plan.schema == schema):
+            plan = _ConversionPlan()._init(schema)
+            plans[key] = plan
     Py_EnterRecursiveCall(" while converting a capnp message")
     try:
         for key, value in values.iteritems():
             if key == 'which':
                 continue
-            field = msg.getSchema().getFieldByName(key)
+            planned_field = None if plan is None else plan.by_name.get(key)
+            if planned_field is None:
+                field = schema.getFieldByName(key)
+            else:
+                field = planned_field.thisptr
             if isinstance(value, str) and field.getType().isData():
                 value = base64.b64decode(value)
-            try:
-                _setDynamicFieldWithField(msg, field, value, parent, depth)
-            except Exception as e:
-                if 'expected isSetInUnion(field)' in str(e):
+            if type(value) is dict and field.getProto().getDiscriminantValue() != 65535:
+                if not helpers.tryWhich(msg.asReader(), &active) or active.getIndex() != field.getIndex():
                     msg.initByField(field)
-                    _setDynamicFieldWithField(msg, field, value, parent, depth)
-                else:
-                    raise
+            _setDynamicFieldWithField(msg, field, value, parent, depth, plans)
     finally:
         Py_LeaveRecursiveCall()
+
 
 cdef bint _use_conversion_plans = _os.environ.get("CAPNP_DICT_PLANS", "1") != "0"
 
@@ -626,15 +636,20 @@ cdef class _ConversionPlan:
     cdef C_StructSchema schema
     cdef vector[C_StructSchema.Field] fields
     cdef list names
+    cdef dict by_name
 
     cdef _init(self, C_StructSchema schema):
         self.schema = schema
         self.names = []
+        self.by_name = {}
         cdef C_StructSchema.FieldSubset fields = schema.getNonUnionFields()
         cdef uint i
         for i in range(fields.size()):
             self.fields.push_back(fields[i])
             self.names.append(<char*>fields[i].getProto().getName().cStr())
+        all_fields = schema.getFields()
+        for i in range(all_fields.size()):
+            self.by_name[<char*>all_fields[i].getProto().getName().cStr()] = _StructSchemaField()._init(all_fields[i])
         return self
 
 
@@ -1121,7 +1136,7 @@ cdef class _DynamicStructBuilder:
         return _to_dict(self, verbose)
 
     def from_dict(self, dict d):
-        _fill_native_struct(self.thisptr, d, self._parent)
+        _fill_native_struct(self.thisptr, d, self._parent, 0, _conversion_cache(self.thisptr.getSchema()))
 
     property total_size:
         def __get__(self):
