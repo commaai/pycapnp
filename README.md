@@ -24,7 +24,8 @@ tests, docs, dependencies, and unsupported-platform CI were removed too.
 Also removed are generated per-schema `Reader`/`Builder` classes, synthetic
 `.Union` enums, `_has_by_field`/`_init_by_field`, allocation-size overrides,
 `from_bytes(builder=True)`, and `to_dict` ordering/base64 options. Incoming base64
-Data values in `from_dict` remain supported.
+Data values in `from_dict` remain supported. Unused schema reset/metadata helpers,
+schema equality, `_which_str`, and legacy exception arguments were removed too.
 `remove_import_hook()` remains a no-op for cereal/opendbc compatibility.
 
 This is intentionally not a full upstream API replacement. The import and

@@ -10,7 +10,6 @@
 # Adapted for use in pycapnp from pyzmq. See https://github.com/zeromq/pyzmq
 # for original project.
 
-import fileinput  # noqa
 import os
 import shutil
 import tarfile
@@ -29,27 +28,8 @@ bundled_version = (1, 4, 0)
 libcapnp_name = "capnproto-c++-%i.%i.%i.tar.gz" % (bundled_version)
 libcapnp_url = "https://capnproto.org/" + libcapnp_name
 
-HERE = os.path.dirname(__file__)
-ROOT = os.path.dirname(HERE)
 
-
-#
-# Utilities
-#
-
-
-def untgz(archive):
-    """Remove .tar.gz"""
-    return archive.replace(".tar.gz", "")
-
-
-def localpath(*args):
-    """construct an absolute path from a list relative to the root pycapnp directory"""
-    plist = [ROOT] + list(args)
-    return os.path.abspath(pjoin(*plist))
-
-
-def fetch_archive(savedir, url, force=False):
+def fetch_archive(savedir, url):
     """download an archive to a specific location"""
     req = urlopen(url)
     # Lookup filename
@@ -57,7 +37,7 @@ def fetch_archive(savedir, url, force=False):
     if not fname:
         fname = os.path.basename(url)
     dest = pjoin(savedir, fname)
-    if os.path.exists(dest) and not force:
+    if os.path.exists(dest):
         print("already have %s" % fname)
         return dest
     print("fetching %s into %s" % (url, savedir))

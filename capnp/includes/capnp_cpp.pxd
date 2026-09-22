@@ -7,7 +7,7 @@ from capnp.helpers.non_circular cimport (
     c_reraise_kj_exception as reraise_kj_exception,
 )
 from capnp.includes.schema_cpp cimport (
-    Node, Data, Field as SchemaField, Enumerant as SchemaEnumerant, MessageBuilder, MessageReader, ReaderOptions,
+    Node, Data, Field as SchemaField, Enumerant as SchemaEnumerant,
 )
 from capnp.includes.types cimport *
 
@@ -27,15 +27,12 @@ cdef extern from "capnp/common.h":
 cdef extern from "kj/string.h" namespace " ::kj":
     cdef cppclass StringPtr nogil:
         StringPtr()
-        StringPtr(char *)
         StringPtr(char *, size_t)
         char* cStr()
         size_t size()
         char* begin()
     cdef cppclass String nogil:
         char* cStr()
-        size_t size()
-        char* begin()
 
 cdef extern from "kj/exception.h" namespace " ::kj":
     cdef cppclass Exception nogil:
@@ -51,13 +48,10 @@ cdef extern from "kj/string-tree.h" namespace " ::kj":
 
 cdef extern from "kj/common.h" namespace " ::kj":
     cdef cppclass Maybe[T] nogil:
-        T& orDefault(T&)
+        pass
     cdef cppclass ArrayPtr[T] nogil:
         ArrayPtr()
         ArrayPtr(T *, size_t size)
-        T* begin()
-        size_t size()
-        T& operator[](size_t index)
 
 cdef extern from "capnp/schema.h" namespace " ::capnp":
     cdef cppclass SchemaType" ::capnp::Type" nogil:
@@ -75,13 +69,10 @@ cdef extern from "capnp/schema.h" namespace " ::capnp":
         StructSchema asStruct() except +reraise_kj_exception
         EnumSchema asEnum() except +reraise_kj_exception
         ConstSchema asConst() except +reraise_kj_exception
-        Schema getDependency(uint64_t id) except +reraise_kj_exception
 
     cdef cppclass StructSchema(Schema) nogil:
         cppclass Field nogil:
             SchemaField.Reader getProto()
-            StructSchema getContainingStruct()
-            uint getIndex()
             SchemaType getType()
 
         cppclass FieldList nogil:
@@ -98,12 +89,10 @@ cdef extern from "capnp/schema.h" namespace " ::capnp":
 
         Field getFieldByName(char * name) except +reraise_kj_exception
 
-        cbool operator == (StructSchema)
 
     cdef cppclass EnumSchema nogil:
         cppclass Enumerant nogil:
             SchemaEnumerant.Reader getProto()
-            EnumSchema getContainingEnum()
             uint16_t getOrdinal()
 
         cppclass EnumerantList nogil:
@@ -111,7 +100,6 @@ cdef extern from "capnp/schema.h" namespace " ::capnp":
             Enumerant operator[](uint index)
 
         EnumerantList getEnumerants()
-        Enumerant getEnumerantByName(char * name)
         Node.Reader getProto()
 
     cdef cppclass ListSchema nogil:
@@ -182,7 +170,6 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             uint size()
             void set(uint index, DynamicValueForward.Reader value) except +reraise_kj_exception
             DynamicValueForward.Builder init(uint index, uint size) except +reraise_kj_exception
-            StructSchema getStructElementType'getSchema().getStructElementType'()
             DynamicList.Reader asReader() except +reraise_kj_exception
 
 cdef extern from "capnp/dynamic.h" namespace " ::capnp":
@@ -191,19 +178,9 @@ cdef extern from "capnp/dynamic.h" namespace " ::capnp":
             Reader()
             Reader(Void value)
             Reader(cbool value)
-            Reader(char value)
-            Reader(short value)
-            Reader(int value)
-            Reader(long value)
             Reader(long long value)
-            Reader(unsigned char value)
-            Reader(unsigned short value)
-            Reader(unsigned int value)
-            Reader(unsigned long value)
             Reader(unsigned long long value)
-            Reader(float value)
             Reader(double value)
-            Reader(char* value)
             Reader(StringPtr value)
             Reader(DynamicList.Reader& value)
             Reader(DynamicEnum value)

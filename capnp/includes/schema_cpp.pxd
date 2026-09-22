@@ -31,10 +31,7 @@ cdef extern from "capnp/schema.capnp.h" namespace " ::capnp::schema":
         cppclass NestedNode nogil:
             cppclass Reader nogil:
                 Text.Reader getName()
-                uint64_t getId()
         cppclass Reader nogil:
-            Text.Reader getDisplayName()
-            uint64_t getScopeId()
             uint64_t getId()
             ListNestedNodeReader getNestedNodes()
             bint isStruct()

@@ -4,14 +4,8 @@ import pytest
 import capnp
 import os
 import math
-import sys
 
 this_dir = os.path.dirname(__file__)
-
-if sys.version_info[0] < 3:
-    EXPECT_BYTES = True
-else:
-    EXPECT_BYTES = False
 
 
 @pytest.fixture
@@ -351,10 +345,7 @@ def check_all_types(reader):
     assert subReader.textField == "☃"
     # This assertion highlights the encoding we expect to see here, since
     # otherwise this appears a bit magical...
-    if EXPECT_BYTES:
-        assert len(subReader.textField) == 3
-    else:
-        assert len(subReader.textField) == 1
+    assert len(subReader.textField) == 1
 
     assert subReader.dataField == b"qux"
 

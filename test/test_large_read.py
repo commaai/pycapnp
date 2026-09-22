@@ -1,5 +1,4 @@
 import os
-import platform
 import tempfile
 
 import pytest
@@ -59,10 +58,6 @@ def test_large_read_multiple_bytes(test_capnp):
             pass
 
 
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy",
-    reason="PyPy memoryview support is limited",
-)
 def test_large_read_mutltiple_bytes_memoryview(test_capnp):
     data = get_two_adjacent_messages(test_capnp)
     for m in test_capnp.Msg.read_multiple_bytes(memoryview(data)):

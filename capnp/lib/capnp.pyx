@@ -34,8 +34,6 @@ _CAPNP_VERSION_MINOR = capnp.CAPNP_VERSION_MINOR
 _CAPNP_VERSION_MICRO = capnp.CAPNP_VERSION_MICRO
 _CAPNP_VERSION = capnp.CAPNP_VERSION
 
-cdef char _EMPTY_DATA_VIEW_SENTINEL = 0
-
 cdef extern from "<kj/string.h>" namespace " ::kj":
     String strStructReader" ::kj::str"(C_DynamicStruct.Reader)
     String strStructBuilder" ::kj::str"(DynamicStruct_Builder)
@@ -99,15 +97,13 @@ class KjException(Exception):
 
     Type = _make_enum("Type", **{x: x for x in _Type.reverse_mapping.values()})
 
-    def __init__(self, message=None, nature=None, durability=None, wrapper=None, type=None):
+    def __init__(self, message=None, wrapper=None, type=None):
         if wrapper is not None:
             self.wrapper = wrapper
             self.message = str(wrapper)
         else:
             self.wrapper = None
             self.message = message
-            self.nature = nature
-            self.durability = durability
             self._type = type
 
     @property
@@ -172,17 +168,6 @@ cdef extern from "Python.h":
     cdef int PyObject_GetBuffer(object, Py_buffer *view, int flags)
     cdef void PyBuffer_Release(Py_buffer *view)
 
-# Templated classes are weird in cython. I couldn't put it in a pxd header for some reason
-cdef extern from "capnp/list.h" namespace " ::capnp":
-    cdef cppclass List[T]:
-        cppclass Reader:
-            T operator[](uint) except +reraise_kj_exception
-            uint size()
-        cppclass Builder:
-            T operator[](uint) except +reraise_kj_exception
-            uint size()
-
-
 cdef extern from "<capnp/pretty-print.h>" namespace " ::capnp":
     StringTree printStructReader" ::capnp::prettyPrint"(C_DynamicStruct.Reader) except +reraise_kj_exception
     StringTree printStructBuilder" ::capnp::prettyPrint"(DynamicStruct_Builder) except +reraise_kj_exception
@@ -195,14 +180,6 @@ cdef class _NodeReader:
     cdef init(self, C_Node.Reader other):
         self.thisptr = other
         return self
-
-    property displayName:
-        def __get__(self):
-            return <char*>self.thisptr.getDisplayName().cStr()
-
-    property scopeId:
-        def __get__(self):
-            return self.thisptr.getScopeId()
 
     property id:
         def __get__(self):
@@ -228,12 +205,6 @@ cdef class _NodeReader:
         def __get__(self):
             return self.thisptr.isEnum()
 
-    property node:
-        """A property that returns the NodeReader as a DynamicStructReader."""
-        def __get__(self):
-            return _DynamicStructReader()._init(self.thisptr, self)
-
-
 cdef class _NestedNodeReader:
     cdef C_Node.NestedNode.Reader thisptr
     cdef init(self, C_Node.NestedNode.Reader other):
@@ -243,9 +214,6 @@ cdef class _NestedNodeReader:
     property name:
         def __get__(self):
             return <char*>self.thisptr.getName().cStr()
-    property id:
-        def __get__(self):
-            return self.thisptr.getId()
 
 
 cdef class _DynamicListReader:
@@ -570,7 +538,6 @@ cdef _setDynamicField(_DynamicSetterClasses thisptr, field, value, parent):
             .format(field, str(value), str(type(value))))
 
 
-# TODO: Is this function used by anyone? Can it be removed?
 cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField field, value, parent):
     cdef C_DynamicValue.Reader temp
     value_type = type(value)
@@ -618,13 +585,6 @@ cdef _setDynamicFieldWithField(DynamicStruct_Builder thisptr, _StructSchemaField
         raise KjException(
             "Tried to set field: '{}' with a value of: '{}' which is an unsupported type: '{}'"
             .format(field, str(value), str(type(value))))
-
-
-# TODO: Is this function used by anyone? Can it be removed?
-cdef _DynamicListBuilder temp_list_b
-cdef _DynamicListReader temp_list_r
-cdef _DynamicStructBuilder temp_msg_b
-cdef _DynamicStructReader temp_msg_r
 
 
 cdef _to_dict(msg, bint verbose):
@@ -821,14 +781,6 @@ cdef class _DynamicStructReader:
     cpdef _has(self, field):
         return self.thisptr.has(field)
 
-    cpdef _which_str(self):
-        try:
-            return <char *>helpers.fixMaybe(self.thisptr.which()).getProto().getName().cStr()
-        except RuntimeError as e:
-            if str(e) == "Member was null.":
-                raise KjException("Attempted to call which on a non-union type")
-            raise
-
     cpdef _DynamicEnumField _which(self):
         """Returns the enum corresponding to the union in this struct
 
@@ -1004,14 +956,6 @@ cdef class _DynamicStructBuilder:
             ptr = self.thisptr.init(field, size)
             return to_python_builder(ptr, self._parent)
 
-    cpdef _which_str(self):
-        try:
-            return <char *>helpers.fixMaybe(self.thisptr.which()).getProto().getName().cStr()
-        except RuntimeError as e:
-            if str(e) == "Member was null.":
-                raise KjException("Attempted to call which on a non-union type")
-            raise
-
     cpdef _DynamicEnumField _which(self):
         """Returns the enum corresponding to the union in this struct
 
@@ -1144,8 +1088,7 @@ cdef class _Schema:
 
 cdef class _StructSchema(_Schema):
     cdef C_StructSchema thisptr_child
-    cdef object __fieldnames, __union_fields, __non_union_fields, __fields, __getters
-    cdef list __fields_list
+    cdef object __fieldnames, __union_fields, __non_union_fields, __fields
     cdef _init_child(self, C_StructSchema other):
         self.thisptr_child = other
         self._init(other)
@@ -1153,8 +1096,6 @@ cdef class _StructSchema(_Schema):
         self.__union_fields = None
         self.__non_union_fields = None
         self.__fields = None
-        self.__fields_list = None
-        self.__getters = None
         return self
 
     cdef C_StructSchema _thisptr(self):
@@ -1205,28 +1146,10 @@ cdef class _StructSchema(_Schema):
             }
             return self.__fields
 
-    property fields_list:
-        """All of the _StructSchemaField in this schema as a list"""
-        def __get__(self):
-            if self.__fields_list is not None:
-                return self.__fields_list
-            fieldlist = self._thisptr().getFields()
-            nfields = fieldlist.size()
-            self.__fields_list = [_StructSchemaField()._init(fieldlist[i], self) for i in xrange(nfields)]
-            return self.__fields_list
-
     property node:
         """The raw schema node"""
         def __get__(self):
             return _DynamicStructReader()._init(self._thisptr().getProto(), self)
-
-    def __richcmp__(_StructSchema self, _StructSchema other, mode):
-        if mode == 2:
-            return self._thisptr() == other._thisptr()
-        elif mode == 3:
-            return not (self._thisptr() == other._thisptr())
-        else:
-            raise NotImplementedError()
 
     def __repr__(self):
         return '<schema for %s>' % self.node.displayName
@@ -1330,18 +1253,18 @@ class _StructModuleWhich(_enum.Enum):
 
 
 class _StructModule(object):
-    def __init__(self, schema, name):
+    def __init__(self, schema):
         self.schema = schema
 
         # Add enums for union fields
-        for field, raw_field in zip(schema.node.struct.fields, schema.fields_list):
+        for field, raw_field in zip(schema.node.struct.fields, schema.fields.values()):
             if field.which() == 'group':
                 name = field.name[0].upper() + field.name[1:]
                 raw_schema = raw_field.schema
                 field_schema = raw_schema.node.struct
 
                 if field_schema.discriminantCount == 0:
-                    sub_module = _StructModule(raw_schema, name)
+                    sub_module = _StructModule(raw_schema)
                 else:
                     mapping = []
                     for union_field in field_schema.fields:
@@ -1409,7 +1332,7 @@ class _StructModule(object):
 
 
 class _EnumModule(object):
-    def __init__(self, schema, name):
+    def __init__(self, schema):
         self.schema = schema
         for name, val in schema.enumerants.items():
             setattr(self, name, val)
@@ -1510,7 +1433,7 @@ cdef class SchemaParser:
                 schema = nodeSchema.get_nested(node.name)
                 proto = schema.get_proto()
                 if proto.isStruct:
-                    local_module = _StructModule(schema.as_struct(), node.name)
+                    local_module = _StructModule(schema.as_struct())
 
                     module.__dict__[node.name] = local_module
                 elif proto.isConst:
@@ -1518,7 +1441,7 @@ cdef class SchemaParser:
                 elif proto.isInterface:
                     continue
                 elif proto.isEnum:
-                    local_module = _EnumModule(schema.as_enum(), node.name)
+                    local_module = _EnumModule(schema.as_enum())
 
                     module.__dict__[node.name] = local_module
 
@@ -1854,14 +1777,6 @@ cdef class _FlatArrayMessageReader(_MessageReader):
 
 
 _global_schema_parser = None
-
-
-def cleanup_global_schema_parser():
-    """Unloads all of the schema from the current context"""
-    global _global_schema_parser
-    if _global_schema_parser:
-        del _global_schema_parser
-        _global_schema_parser = None
 
 
 def load(file_name, display_name=None, imports=[]):

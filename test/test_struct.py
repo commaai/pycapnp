@@ -2,7 +2,6 @@ import pytest
 import capnp
 import os
 import tempfile
-import sys
 
 from capnp.lib.capnp import KjException
 
@@ -43,9 +42,6 @@ def test_which_builder(addressbook):
         addresses._which()
 
     with pytest.raises(KjException):
-        addresses._which_str()
-
-    with pytest.raises(KjException):
         addresses.which
 
 
@@ -79,19 +75,12 @@ def test_which_reader(addressbook):
     assert bob.employment.which == "unemployed"
 
     with pytest.raises(KjException):
-        addresses._which_str()
-
-    with pytest.raises(KjException):
         addresses._which()
 
     with pytest.raises(KjException):
         addresses.which
 
 
-@pytest.mark.skipif(
-    capnp.version.LIBCAPNP_VERSION < 5000,
-    reason="Using ints as enums requires v0.5.0+ of the C++ capnp library",
-)
 def test_enum(addressbook):
     addresses = addressbook.AddressBook.new_message()
     people = addresses.init("people", 2)
@@ -150,14 +139,8 @@ def test_null_str(all_types):
 def test_unicode_str(all_types):
     msg = all_types.TestAllTypes.new_message()
 
-    if sys.version_info[0] == 2:
-        msg.textField = "f\u00e6oo".encode("utf-8")
-
-        assert msg.textField.decode("utf-8") == "f\u00e6oo"
-    else:
-        msg.textField = "f\u00e6oo"
-
-        assert msg.textField == "f\u00e6oo"
+    msg.textField = "fæoo"
+    assert msg.textField == "fæoo"
 
 
 def test_new_message(all_types):

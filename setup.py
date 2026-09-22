@@ -103,13 +103,6 @@ class build_libcapnp_ext(build_ext_c):
         self.force_system_libcapnp = None
         self.libcapnp_url = None
 
-    def finalize_options(self):
-        # print('The custom option for install is ', self.custom_option)
-        build_ext_c.finalize_options(self)
-
-    def build_extension(self, ext):
-        build_ext_c.build_extension(self, ext)
-
     def run(self):  # noqa: C901
         if self.force_bundled_libcapnp:
             need_build = True

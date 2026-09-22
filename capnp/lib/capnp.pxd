@@ -45,7 +45,6 @@ cdef class _DynamicStructReader:
     cpdef _get(self, field)
     cpdef _has(self, field)
     cpdef _DynamicEnumField _which(self)
-    cpdef _which_str(self)
     cpdef _get_by_field(self, _StructSchemaField field)
     cpdef as_builder(self)
 
@@ -68,7 +67,6 @@ cdef class _DynamicStructBuilder:
     cpdef _get_by_field(self, _StructSchemaField field)
     cpdef _set_by_field(self, _StructSchemaField field, value)
     cpdef _DynamicEnumField _which(self)
-    cpdef _which_str(self)
     cpdef as_reader(self)
     cpdef copy(self)
 
