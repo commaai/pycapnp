@@ -1,0 +1,19 @@
+{
+  "name": "alternative-heldout",
+  "cwd": "/tmp/capnp-speed/alternative",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/alternative/run.py",
+    "/tmp/opendbc_logs/ascent_1.rlog.zst"
+  ],
+  "pythonpath": "/tmp/capnp-speed-pybind-deps:/tmp/capnp-speed/baseline:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "37730aca4d22ef6303b09205f71bb0b79fc892ab",
+  "extensions": {},
+  "started": 1790086482.5765262,
+  "returncode": 0,
+  "elapsed": 24.710806608200073
+}

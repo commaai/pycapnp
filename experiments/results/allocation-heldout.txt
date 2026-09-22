@@ -1,0 +1,109 @@
+evaluation_file /tmp/opendbc_logs/ascent_1.rlog.zst sha256 384be782dcb714932c329c53f348bf103bd642381defbae8ab5978eb086c4d2a
+training_file /tmp/pr3704_logs/0.rlog.zst sha256 d34169fa4af2109089f56dc474f05ca6fac7bd19f57ba20cd5d453e78727619c same_file_content_as_evaluation False
+corpus e74408571fc8decef9b421d5cdc220071109bdc950b192ddd6c0b512d8f935d8 1060 bytes 653264
+training_total_events 82580 training_subset [0:41290] training_subset_count 41290
+trained cached buffer bound bytes 167392 (capacity * words * 8; native metadata and live messages extra)
+segments public kwargs 14 multisegment/ 1060
+segments from_dict default 14 multisegment/ 1060
+segments from_dict presize 64 103 multisegment/ 1060
+segments from_dict pool 64 103 multisegment/ 1060
+segments from_dict presize 256 17 multisegment/ 1060
+segments from_dict pool 256 17 multisegment/ 1060
+segments from_dict presize 1024 14 multisegment/ 1060
+segments from_dict pool 1024 14 multisegment/ 1060
+segments from_dict presize 4096 4 multisegment/ 1060
+segments from_dict pool 4096 4 multisegment/ 1060
+segments from_dict presize 16384 0 multisegment/ 1060
+segments from_dict pool 16384 0 multisegment/ 1060
+segments from_dict pool1024 recycle=False 14 multisegment/ 1060
+segments from_dict pool1024 recycle=True 14 multisegment/ 1060
+segments from_dict arena reset 64 103 multisegment/ 1060
+segments from_dict arena reset 256 17 multisegment/ 1060
+segments from_dict arena reset 1024 14 multisegment/ 1060
+segments from_dict arena reset 4096 4 multisegment/ 1060
+segments from_dict arena reset 16384 0 multisegment/ 1060
+segments from_dict input-size presize 37 multisegment/ 1060
+segments from_dict trained size 57 multisegment/ 1060
+segments from_dict trained pool 57 multisegment/ 1060
+segments fields default 14 multisegment/ 1060
+segments fields presize 64 103 multisegment/ 1060
+segments fields pool 64 103 multisegment/ 1060
+segments fields presize 256 17 multisegment/ 1060
+segments fields pool 256 17 multisegment/ 1060
+segments fields presize 1024 14 multisegment/ 1060
+segments fields pool 1024 14 multisegment/ 1060
+segments fields presize 4096 4 multisegment/ 1060
+segments fields pool 4096 4 multisegment/ 1060
+segments fields presize 16384 0 multisegment/ 1060
+segments fields pool 16384 0 multisegment/ 1060
+segments fields pool1024 recycle=False 14 multisegment/ 1060
+segments fields pool1024 recycle=True 14 multisegment/ 1060
+segments fields arena reset 64 103 multisegment/ 1060
+segments fields arena reset 256 17 multisegment/ 1060
+segments fields arena reset 1024 14 multisegment/ 1060
+segments fields arena reset 4096 4 multisegment/ 1060
+segments fields arena reset 16384 0 multisegment/ 1060
+segments fields input-size presize 37 multisegment/ 1060
+segments fields trained size 57 multisegment/ 1060
+segments fields trained pool 57 multisegment/ 1060
+public kwargs                    25.696 us/item [25.548, 44.846]
+from_dict default                25.167 us/item [24.934, 43.996]
+from_dict presize 64             25.064 us/item [24.814, 25.404]
+from_dict pool 64                24.968 us/item [24.946, 25.886]
+from_dict presize 256            25.045 us/item [24.877, 43.440]
+from_dict pool 256               24.989 us/item [24.880, 26.690]
+from_dict presize 1024           25.422 us/item [24.987, 43.963]
+from_dict pool 1024              24.897 us/item [24.803, 43.308]
+from_dict presize 4096           25.467 us/item [25.406, 25.876]
+from_dict pool 4096              24.889 us/item [24.672, 25.467]
+from_dict presize 16384          26.776 us/item [26.652, 45.578]
+from_dict pool 16384             24.799 us/item [24.717, 25.454]
+from_dict pool1024 recycle=False   24.830 us/item [24.718, 42.752]
+from_dict pool1024 recycle=True   24.948 us/item [24.604, 25.289]
+from_dict arena reset 64         24.996 us/item [24.793, 25.712]
+from_dict arena reset 256        24.855 us/item [24.762, 42.968]
+from_dict arena reset 1024       24.913 us/item [24.729, 27.876]
+from_dict arena reset 4096       24.760 us/item [24.616, 42.907]
+from_dict arena reset 16384      24.746 us/item [24.623, 42.873]
+from_dict input-size presize     25.070 us/item [24.803, 43.668]
+from_dict trained size           25.320 us/item [25.140, 26.488]
+from_dict trained pool           25.102 us/item [24.981, 25.508]
+fields default                   19.257 us/item [19.140, 19.489]
+fields presize 64                19.235 us/item [19.030, 34.805]
+fields pool 64                   19.110 us/item [19.012, 20.000]
+fields presize 256               19.162 us/item [18.969, 20.935]
+fields pool 256                  19.224 us/item [18.936, 34.205]
+fields presize 1024              19.276 us/item [19.045, 33.775]
+fields pool 1024                 19.090 us/item [18.859, 33.239]
+fields presize 4096              19.576 us/item [19.402, 34.952]
+fields pool 4096                 19.069 us/item [18.947, 19.770]
+fields presize 16384             20.690 us/item [20.401, 21.090]
+fields pool 16384                19.071 us/item [18.827, 20.809]
+fields pool1024 recycle=False    19.071 us/item [18.907, 19.782]
+fields pool1024 recycle=True     19.141 us/item [18.964, 19.816]
+fields arena reset 64            19.148 us/item [19.044, 33.793]
+fields arena reset 256           18.991 us/item [18.861, 34.349]
+fields arena reset 1024          18.977 us/item [18.882, 19.672]
+fields arena reset 4096          19.026 us/item [18.893, 34.335]
+fields arena reset 16384         18.950 us/item [18.895, 19.748]
+fields input-size presize        19.258 us/item [19.088, 32.982]
+fields trained size              19.388 us/item [19.234, 34.942]
+fields trained pool              19.255 us/item [19.048, 19.620]
+empty default                     0.469 us/item [0.467, 0.837]
+empty presize 64                  0.358 us/item [0.354, 0.371]
+empty pool 64                     0.368 us/item [0.363, 0.383]
+empty presize 256                 0.385 us/item [0.382, 0.694]
+empty pool 256                    0.366 us/item [0.364, 0.369]
+empty presize 1024                0.461 us/item [0.458, 0.466]
+empty pool 1024                   0.367 us/item [0.365, 0.643]
+empty presize 4096                0.708 us/item [0.705, 1.189]
+empty pool 4096                   0.371 us/item [0.365, 0.640]
+empty presize 16384               1.501 us/item [1.495, 2.395]
+empty pool 16384                  0.369 us/item [0.363, 0.639]
+empty pool1024 recycle=False      0.366 us/item [0.363, 0.511]
+empty pool1024 recycle=True       0.361 us/item [0.357, 0.363]
+empty arena reset 64              0.324 us/item [0.323, 0.329]
+empty arena reset 256             0.328 us/item [0.323, 0.556]
+empty arena reset 1024            0.325 us/item [0.322, 0.557]
+empty arena reset 4096            0.325 us/item [0.322, 0.360]
+empty arena reset 16384           0.326 us/item [0.322, 0.552]

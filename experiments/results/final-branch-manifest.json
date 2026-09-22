@@ -1,0 +1,50 @@
+{
+  "dynamic": {
+    "commit": "b6ed823ab9e72a309c2cf0680cd77477d7f6a533",
+    "status": "",
+    "extensions": {
+      "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "8e4c6b43db9f3c6dee2adfa1c7b5377009fd4ec21014c292d8c4a5622045e017"
+    }
+  },
+  "bulk": {
+    "commit": "51617a586bac7bdb9b367d649e67893c22069e74",
+    "status": "",
+    "extensions": {
+      "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "a1e46bf7ae7239f7a336fc01a8fb1cac852d378c5bcc05fffc1f7d54860cec28"
+    }
+  },
+  "generated": {
+    "commit": "b40241af455eae1b7cc8059fce02e99ff75e93bc",
+    "status": "",
+    "extensions": {
+      "experiments/generated/generated_native.cpython-312-x86_64-linux-gnu.so": "29b72b879463f7fa1b579b4c4b024056b72d508a4dc6750dcee286675a10f787",
+      "experiments/generated/generated_cython.cpython-312-x86_64-linux-gnu.so": "e2e5a8e56eb4e5264b1f31d897f8e13c1d841e575b54dd0873cd69d08b24adc4"
+    }
+  },
+  "logreader": {
+    "commit": "cc04d144e9d366fa179c1f96bcbef6e68a8f1551",
+    "status": "",
+    "extensions": {
+      "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "f88839696d3535c5759208877afa7a1f7d94c2573e14397c01b7f36034c733ac"
+    }
+  },
+  "allocation": {
+    "commit": "f2ebe9bf8afd200f248f5fc10593c76e31d28d55",
+    "status": "",
+    "extensions": {
+      "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "163b0eeb33bf66b98d367f3ff374c3cf5a144b4cab9ac00db32db353856c101b"
+    }
+  },
+  "toolchain": {
+    "commit": "82fe615bd424b7d4f8c5e5ad7b5a3cd92b061916",
+    "status": "",
+    "extensions": {
+      "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "e24ec361874287ef280d7492528594e2e7d613c32c51461036b15697055faece"
+    }
+  },
+  "alternative": {
+    "commit": "fb149e91cb12342f0cf4a5b26f8cb97c4628405b",
+    "status": "",
+    "extensions": {}
+  }
+}

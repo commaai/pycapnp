@@ -1,0 +1,29 @@
+{
+  "name": "schema-hyperfine",
+  "cwd": "/tmp/capnp-speed/allocation",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "hyperfine",
+    "--warmup",
+    "3",
+    "--runs",
+    "20",
+    "--export-json",
+    "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/experiments/results/schema-hyperfine.json",
+    "-L",
+    "mode",
+    "source,compiled,lazy,create",
+    "/home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child {mode}"
+  ],
+  "pythonpath": "/tmp/capnp-speed/allocation:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "0b2b65c19e5385a9018c7eb00dde05050b8cda7c",
+  "extensions": {
+    "/tmp/capnp-speed/allocation/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "163b0eeb33bf66b98d367f3ff374c3cf5a144b4cab9ac00db32db353856c101b"
+  },
+  "started": 1790086425.5991693,
+  "returncode": 0,
+  "elapsed": 3.9195401668548584
+}

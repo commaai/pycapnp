@@ -1,0 +1,41 @@
+{"rlog": "/tmp/pr3704_logs/1.rlog.zst", "sha256": "836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde", "events": 1049}
+generated_cython parity PASS
+generated_native parity PASS
+dynamic read               3.97 us/item  [3.92, 4.00]  n=1049
+dynamic field write       24.83 us/item  [24.68, 25.53]  n=1049
+dynamic write             30.30 us/item  [30.24, 30.69]  n=1049
+generated_cython read       0.44 us/item  [0.43, 0.45]  n=1049
+generated_cython write       3.20 us/item  [3.14, 3.25]  n=1049
+generated_cython field      12.94 us/item  [12.89, 12.98]  n=1049
+generated_native read       0.41 us/item  [0.41, 0.42]  n=1049
+generated_native write       3.21 us/item  [3.18, 3.25]  n=1049
+generated_native field      13.01 us/item  [12.93, 13.05]  n=1049
+generated_native carState       0.35 us/item  [0.35, 0.35]  n=75
+generated_cython carState       0.39 us/item  [0.38, 0.39]  n=75
+dynamic carState           5.90 us/item  [5.83, 5.95]  n=75
+generated_native carControl       0.36 us/item  [0.36, 0.37]  n=76
+generated_cython carControl       0.39 us/item  [0.38, 0.40]  n=76
+dynamic carControl         5.31 us/item  [5.30, 5.32]  n=76
+generated_native modelV2       1.16 us/item  [1.15, 1.18]  n=13
+generated_cython modelV2       1.22 us/item  [1.20, 1.23]  n=13
+dynamic modelV2            9.59 us/item  [9.58, 9.61]  n=13
+generated_native longitudinalPlan       0.65 us/item  [0.65, 0.66]  n=13
+generated_cython longitudinalPlan       0.65 us/item  [0.65, 0.66]  n=13
+dynamic longitudinalPlan       5.92 us/item  [5.91, 5.97]  n=13
+generated_native CAN envelope       1.59 us/item  [1.59, 1.59]  n=54
+generated_cython CAN envelope       1.83 us/item  [1.83, 1.84]  n=54
+dynamic CAN envelope       3.31 us/item  [3.31, 3.31]  n=54
+generated_native CAN frames       7.66 us/item  [7.64, 7.68]  n=54
+generated_cython CAN frames       8.22 us/item  [8.19, 8.90]  n=54
+dynamic CAN frames        69.15 us/item  [69.02, 69.27]  n=54
+generated_native sparse model       0.37 us/item  [0.37, 0.37]  n=13
+generated_cython sparse model       0.38 us/item  [0.38, 0.39]  n=13
+dynamic sparse model       2.50 us/item  [2.50, 2.52]  n=13
+dynamic full list          3.58 us/item  [3.57, 3.61]  n=13
+generated_native view sparse       0.25 us/item  [0.25, 0.25]  n=13
+generated_native view full       0.73 us/item  [0.73, 0.73]  n=13
+generated_native eager full       0.57 us/item  [0.57, 0.58]  n=13
+generated_cython view sparse       0.29 us/item  [0.28, 0.29]  n=13
+generated_cython view full       0.78 us/item  [0.77, 0.78]  n=13
+generated_cython eager full       0.60 us/item  [0.60, 0.60]  n=13
+dynamic read confirm       3.82 us/item  [3.82, 3.83]  n=1049

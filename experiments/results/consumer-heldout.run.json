@@ -1,0 +1,23 @@
+{
+  "name": "consumer-heldout",
+  "cwd": "/tmp/capnp-speed/bulk",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/bulk/bench_generated_consumer.py",
+    "/tmp/opendbc_logs/ascent_1.rlog.zst",
+    "--output",
+    "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/experiments/results/consumer-heldout.json"
+  ],
+  "pythonpath": "/tmp/capnp-speed/bulk:/home/batman/openpilot:/tmp/capnp-speed/generated/experiments/generated",
+  "tuning": {},
+  "commit": "51617a586bac7bdb9b367d649e67893c22069e74",
+  "extensions": {
+    "/tmp/capnp-speed/bulk/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "a1e46bf7ae7239f7a336fc01a8fb1cac852d378c5bcc05fffc1f7d54860cec28"
+  },
+  "started": 1790051356.3512332,
+  "returncode": 0,
+  "elapsed": 4.162628889083862
+}

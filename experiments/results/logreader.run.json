@@ -1,0 +1,24 @@
+{
+  "name": "logreader",
+  "cwd": "/tmp/capnp-speed/logreader",
+  "command": [
+    "taskset",
+    "-c",
+    "0,1",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/logreader/bench.py",
+    "/tmp/pr3704_logs/1.rlog.zst",
+    "/tmp/opendbc_logs/ascent_1.rlog.zst",
+    "--repeat",
+    "7"
+  ],
+  "pythonpath": "/tmp/capnp-speed/logreader:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "dddd04747adc27d55fe41c1ca8c960784c8b8e9b",
+  "extensions": {
+    "/tmp/capnp-speed/logreader/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "f88839696d3535c5759208877afa7a1f7d94c2573e14397c01b7f36034c733ac"
+  },
+  "started": 1790086245.4312215,
+  "returncode": 0,
+  "elapsed": 56.47453236579895
+}

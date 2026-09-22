@@ -6,13 +6,13 @@ their results are not presented as drop-in binding speedups.
 
 | Approaches | Branch | Directory | Status |
 | --- | --- | --- | --- |
-| 1, 2, 3, 5, 12: dynamic Cython, conversion, unions, plans, wrappers | speed/dynamic | dynamic | Implementation and measurement |
-| 4, 7, 9: CAN batches, numeric lists, compiled consumers | speed/bulk | bulk | Implementation and measurement |
-| 6, 10: generated Cython and CPython bindings | speed/generated | generated | Implementation and measurement |
-| 8, 11, 15: projection, forwarding/pickle, parallel scanning | speed/logreader | logreader | Implementation and measurement |
-| 13, 16: arenas, precompiled schemas/reflection | speed/allocation | allocation | Implementation and measurement |
-| 14: compiler optimization | speed/toolchain | toolchain | Implementation and measurement |
-| 17, 18, 19: direct codec, JIT, alternate binding framework | speed/alternative | alternative | Implementation and measurement |
+| 1, 2, 3, 5, 12: dynamic Cython, conversion, unions, plans, wrappers | speed/dynamic | dynamic | Implemented and independently reviewed |
+| 4, 7, 9: CAN batches, numeric lists, compiled consumers | speed/bulk | bulk | Implemented and independently reviewed |
+| 6, 10: generated Cython and CPython bindings | speed/generated | generated | Implemented and independently reviewed |
+| 8, 11, 15: projection, forwarding/pickle, parallel scanning | speed/logreader | logreader | Implemented and independently reviewed |
+| 13, 16: arenas, precompiled schemas/reflection | speed/allocation | allocation | Implemented and independently reviewed |
+| 14: compiler optimization | speed/toolchain | toolchain | Implemented and independently reviewed |
+| 17, 18, 19: direct codec, JIT, alternate binding framework | speed/alternative | alternative | Implemented and independently reviewed |
 
 ## Acceptance and measurement
 
@@ -24,9 +24,11 @@ agent repeats that review. A clean review means no identified unresolved issue,
 not proof that no faster implementation can ever exist.
 
 Exploratory runs use separate CPU affinities while teams build; these are noisy
-and cannot establish small gains. Final comparisons alternate baseline and
-candidate on CPU 0 with competing builds paused. CPU 12 shares its physical
-core and must also be idle. Record source revisions, extension hashes, input and
+and cannot establish small gains. Final dynamic/toolchain comparisons alternate
+baseline and candidate processes on CPU 0 with competing builds paused. Optional
+API suites use paired, rotated or randomized in-process measurements; the
+LogReader suite uses affinity 0,1 for both serial and parallel cases. CPU 12 shares
+CPU 0’s physical core and must also be idle. Record source revisions, extension hashes, input and
 corpus hashes, Python version, affinity, and all raw output. Keep GC enabled.
 Report results per workload rather than averaging incompatible units.
 
@@ -39,3 +41,5 @@ conclusions.
 
 Experiments remain isolated until reviewed. A regression or unsuccessful
 architecture is retained as evidence rather than silently dropped.
+
+Final measured findings, compatibility limits and validation: [RESULTS.md](RESULTS.md).

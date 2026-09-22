@@ -1,0 +1,22 @@
+{
+  "name": "generated-ablation",
+  "cwd": "/tmp/capnp-speed/generated",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/generated/ablate.py",
+    "/tmp/pr3704_logs/1.rlog.zst"
+  ],
+  "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot:/tmp/capnp-speed/generated/experiments/generated",
+  "tuning": {},
+  "commit": "b40241af455eae1b7cc8059fce02e99ff75e93bc",
+  "extensions": {
+    "/tmp/capnp-speed/generated/experiments/generated/generated_native.cpython-312-x86_64-linux-gnu.so": "29b72b879463f7fa1b579b4c4b024056b72d508a4dc6750dcee286675a10f787",
+    "/tmp/capnp-speed/generated/experiments/generated/generated_cython.cpython-312-x86_64-linux-gnu.so": "e2e5a8e56eb4e5264b1f31d897f8e13c1d841e575b54dd0873cd69d08b24adc4"
+  },
+  "started": 1790051390.1310775,
+  "returncode": 0,
+  "elapsed": 9.962963342666626
+}

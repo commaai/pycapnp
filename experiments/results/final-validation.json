@@ -1,0 +1,84 @@
+[
+  {
+    "name": "bulk-final-tests",
+    "cwd": "/tmp/capnp-speed/bulk",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "test",
+      "experiments/bulk/test_bulk.py",
+      "experiments/bulk/test_generated_consumer.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/bulk:/home/batman/openpilot:/tmp/capnp-speed/generated/experiments/generated:/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/lib/python3.12/site-packages",
+    "returncode": 0,
+    "commit": "51617a586bac7bdb9b367d649e67893c22069e74"
+  },
+  {
+    "name": "generated-final-tests",
+    "cwd": "/tmp/capnp-speed/generated/experiments/generated",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "checks.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot",
+    "returncode": 0,
+    "commit": "b40241af455eae1b7cc8059fce02e99ff75e93bc"
+  },
+  {
+    "name": "generated-reentrant-tests",
+    "cwd": "/tmp/capnp-speed/generated/experiments/generated",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "reentrant.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot",
+    "returncode": 0,
+    "commit": "b40241af455eae1b7cc8059fce02e99ff75e93bc"
+  },
+  {
+    "name": "alternative-wire-tests",
+    "cwd": "/tmp/capnp-speed/alternative/experiments/alternative",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "test_wire.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot",
+    "returncode": 0,
+    "commit": "228f6a018e1e0a09fa342c20e1822d37255daf16"
+  },
+  {
+    "name": "alternative-adversarial-tests",
+    "cwd": "/tmp/capnp-speed/alternative/experiments/alternative",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "test_adversarial.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot",
+    "returncode": 0,
+    "commit": "228f6a018e1e0a09fa342c20e1822d37255daf16"
+  },
+  {
+    "name": "alternative-writers-tests",
+    "cwd": "/tmp/capnp-speed/alternative/experiments/alternative",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "test_writers.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot",
+    "returncode": 0,
+    "commit": "228f6a018e1e0a09fa342c20e1822d37255daf16"
+  },
+  {
+    "name": "alternative-layout-tests",
+    "cwd": "/tmp/capnp-speed/alternative/experiments/alternative",
+    "command": [
+      "/home/batman/openpilot/.venv/bin/python",
+      "test_layout.py"
+    ],
+    "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot",
+    "returncode": 0,
+    "commit": "228f6a018e1e0a09fa342c20e1822d37255daf16"
+  }
+]

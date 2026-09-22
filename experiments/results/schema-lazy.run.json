@@ -1,0 +1,22 @@
+{
+  "name": "schema-lazy",
+  "cwd": "/tmp/capnp-speed/allocation",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/allocation/bench_compiled_workload.py",
+    "lazy",
+    "/tmp/pr3704_logs/1.rlog.zst"
+  ],
+  "pythonpath": "/tmp/capnp-speed/allocation:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "0b2b65c19e5385a9018c7eb00dde05050b8cda7c",
+  "extensions": {
+    "/tmp/capnp-speed/allocation/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "163b0eeb33bf66b98d367f3ff374c3cf5a144b4cab9ac00db32db353856c101b"
+  },
+  "started": 1790086441.5697424,
+  "returncode": 0,
+  "elapsed": 11.879372358322144
+}

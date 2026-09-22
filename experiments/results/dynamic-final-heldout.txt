@@ -1,0 +1,16 @@
+Finished baseline round 1
+Finished candidate round 1
+Finished candidate round 2
+Finished baseline round 2
+live read                 3.70 ->      2.10 us/item (1.760x)
+field write+encode       19.02 ->     17.45 us/item (1.090x)
+kwargs write+encode      25.78 ->      7.33 us/item (3.517x)
+payload assignment        1.26 ->      1.25 us/item (1.008x)
+CAN cached read          11.31 ->     10.90 us/item (1.038x)
+CAN cached write         10.80 ->     10.36 us/item (1.043x)
+LogReader parse+scan      3.38 ->      1.83 us/item (1.849x)
+dict export              48.95 ->      8.52 us/item (5.746x)
+copy+encode               0.70 ->      0.69 us/item (1.007x)
+reader pickle             2.84 ->      2.54 us/item (1.116x)
+LogReader pickle          3.28 ->      3.26 us/item (1.006x)
+schema reflection       298.09 ->    131.57 us/item (2.266x)

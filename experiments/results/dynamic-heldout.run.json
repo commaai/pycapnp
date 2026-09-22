@@ -1,0 +1,26 @@
+{
+  "name": "dynamic-heldout",
+  "cwd": "/tmp/capnp-speed/dynamic",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/experiments/compare.py",
+    "/tmp/capnp-speed/baseline",
+    "/tmp/capnp-speed/dynamic",
+    "/tmp/opendbc_logs/ascent_1.rlog.zst",
+    "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/experiments/results/dynamic-heldout.json",
+    "--rounds",
+    "2"
+  ],
+  "pythonpath": "/tmp/capnp-speed/dynamic:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "accb06de2c139f39e0458f3e0779d436c6c30934",
+  "extensions": {
+    "/tmp/capnp-speed/dynamic/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "375c88085b355bcef7fff3f0d2a1556dd674e9e847e64a0ac56f2ca37d6b0094"
+  },
+  "started": 1790051125.144087,
+  "returncode": 0,
+  "elapsed": 47.387184381484985
+}

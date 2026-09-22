@@ -1,0 +1,7 @@
+{
+  "note": "Supplement captured after runs; static archive was unchanged during control benchmarks. Temporary benchmark extensions were removed and no binary hash was retained. Native compile invocations are defined in the committed control.py/run.py sources.",
+  "archive": "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/build/temp.linux-x86_64-cpython-312/capnproto/libcapnp-vendored.a",
+  "archive_sha256": "262ab589afd445ae96ca91f9e73fe80da1f2bac15fd255c12f1574af48496970",
+  "cc_version": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "cxx_version": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+}

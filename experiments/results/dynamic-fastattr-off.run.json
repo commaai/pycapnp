@@ -1,0 +1,23 @@
+{
+  "name": "dynamic-fastattr-off",
+  "cwd": "/tmp/capnp-speed/dynamic",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "benchmarks/bench_openpilot.py",
+    "/tmp/pr3704_logs/1.rlog.zst"
+  ],
+  "pythonpath": "/tmp/capnp-speed/dynamic:/home/batman/openpilot",
+  "tuning": {
+    "CAPNP_FAST_GETATTR": "0"
+  },
+  "commit": "accb06de2c139f39e0458f3e0779d436c6c30934",
+  "extensions": {
+    "/tmp/capnp-speed/dynamic/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "375c88085b355bcef7fff3f0d2a1556dd674e9e847e64a0ac56f2ca37d6b0094"
+  },
+  "started": 1790051172.5411947,
+  "returncode": 0,
+  "elapsed": 11.43993878364563
+}

@@ -1,0 +1,18 @@
+Benchmark 1: cold runtime compile
+  Time (mean ± σ):     527.2 ms ±   8.9 ms    [User: 467.7 ms, System: 59.0 ms]
+  Range (min … max):   522.5 ms … 558.8 ms    15 runs
+ 
+  Warning: The first benchmarking run for this command was significantly slower than the rest (558.8 ms). This could be caused by (filesystem) caches that were not filled until after the first run. You are already using the '--warmup' option which helps to fill these caches before the actual benchmark. You can either try to increase the warmup count further or re-run this benchmark on a quiet system in case it was a random outlier. Alternatively, consider using the '--prepare' option to clear the caches before each timing run.
+ 
+Benchmark 2: cached runtime compile
+  Time (mean ± σ):     154.4 ms ±   2.8 ms    [User: 127.5 ms, System: 26.8 ms]
+  Range (min … max):   151.0 ms … 160.4 ms    15 runs
+ 
+Benchmark 3: prebuilt extension load
+  Time (mean ± σ):     150.6 ms ±   1.5 ms    [User: 125.3 ms, System: 25.2 ms]
+  Range (min … max):   148.6 ms … 154.3 ms    15 runs
+ 
+Summary
+  prebuilt extension load ran
+    1.03 ± 0.02 times faster than cached runtime compile
+    3.50 ± 0.07 times faster than cold runtime compile

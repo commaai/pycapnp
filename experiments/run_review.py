@@ -52,7 +52,7 @@ add('generated-vs-optimized', 'generated', 'experiments/generated/benchmark.py',
     imports=f'{TREES}/dynamic:{OP}:{TREES}/generated/experiments/generated')
 add('generated-ablation', 'generated', 'experiments/generated/ablate.py', [TRAIN],
     imports=f'{TREES}/baseline:{OP}:{TREES}/generated/experiments/generated')
-add('generated-startup', 'generated', 'experiments/generated/startup.py', [TRAIN, '--repeat', '15'],
+add('generated-startup', 'baseline', str(TREES / 'generated/experiments/generated/startup.py'), [TRAIN, '--repeat', '15'],
     imports=f'{TREES}/baseline:{OP}:{TREES}/generated/experiments/generated')
 add('logreader', 'logreader', 'experiments/logreader/bench.py', [TRAIN, HELD, '--repeat', '7'], cpu='0,1')
 add('logreader-ablation', 'logreader', 'experiments/logreader/ablate.py', [TRAIN, HELD, '--repeat', '5'], cpu='0,1')

@@ -1,0 +1,19 @@
+{
+  "name": "alternative-route",
+  "cwd": "/tmp/capnp-speed/alternative",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/alternative/run.py",
+    "/tmp/pr3704_logs/1.rlog.zst"
+  ],
+  "pythonpath": "/tmp/capnp-speed-pybind-deps:/tmp/capnp-speed/baseline:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "37730aca4d22ef6303b09205f71bb0b79fc892ab",
+  "extensions": {},
+  "started": 1790086453.4516838,
+  "returncode": 0,
+  "elapsed": 24.538639068603516
+}

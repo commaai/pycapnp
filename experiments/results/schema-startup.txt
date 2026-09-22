@@ -1,0 +1,11 @@
+archive_bytes 380680
+source load_ms 14.298308989964426 process_ms 46.903126989491284 load_range 14.18547600042075 14.532470027916133
+compiled load_ms 5.6281499564647675 process_ms 37.61520306579769 load_range 5.597500945441425 5.699784029275179
+lazy load_ms 2.1987290820106864 process_ms 33.783302991651 load_range 2.174713066779077 2.2586119594052434
+create load_ms 15.287364018149674 process_ms 48.062916030175984 load_range 15.068360953591764 15.617336961440742
+reflection uncached      307.77 us/item  [305.57, 308.62]  n=1
+reflection deepcopy       19.65 us/item  [19.62, 19.66]  n=1
+reflection JSON copy       7.03 us/item  [7.03, 7.07]  n=1
+reflection shared          0.02 us/item  [0.02, 0.03]  n=1
+reflection cached API       7.23 us/item  [7.19, 7.27]  n=1
+reflection JSON API        0.10 us/item  [0.09, 0.10]  n=1

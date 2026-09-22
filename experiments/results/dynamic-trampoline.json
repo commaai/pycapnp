@@ -1,0 +1,168 @@
+{
+  "host": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+  "cpu": 0,
+  "script_sha256": "b38edea3b6cf85e36e56c1f3f8dce1ebccbdf53c5e53572a749ab82a3b546957",
+  "python": "/home/batman/openpilot/.venv/bin/python",
+  "openpilot_commit": "7f6f13997c3c9b8e27e1581583f61e3fcabc5151",
+  "tuning_environment": {},
+  "rlog": "/tmp/pr3704_logs/1.rlog.zst",
+  "rlog_sha256": "0cd538d9c73d64271d98f908d02465f7513ed2d79c8e4ea0d76a59ff26f6446b",
+  "implementations": {
+    "baseline": {
+      "path": "/tmp/capnp-speed/dynamic-pretrampoline",
+      "commit": "accb06de2c139f39e0458f3e0779d436c6c30934",
+      "diff": "",
+      "status": "",
+      "extensions": {
+        "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "375c88085b355bcef7fff3f0d2a1556dd674e9e847e64a0ac56f2ca37d6b0094"
+      }
+    },
+    "candidate": {
+      "path": "/tmp/capnp-speed/dynamic",
+      "commit": "382502f432db5ab19ad42e2015ace2a61e0aef88",
+      "diff": "",
+      "status": "",
+      "extensions": {
+        "capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "8e4c6b43db9f3c6dee2adfa1c7b5377009fd4ec21014c292d8c4a5622045e017"
+      }
+    }
+  },
+  "runs": [
+    {
+      "name": "baseline",
+      "round": 0,
+      "time": 1790087083.0399778,
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "/home/batman/openpilot/.venv/bin/python",
+        "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/benchmarks/bench_openpilot.py",
+        "/tmp/pr3704_logs/1.rlog.zst",
+        "--repeat",
+        "5",
+        "--messages",
+        "1000"
+      ],
+      "stdout": "Python 3.12.13 | capnp 2.2.4 | /tmp/capnp-speed/dynamic-pretrampoline/capnp/__init__.py\nsha256=836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde bytes=693448\n{'initData': 2, 'narrowRoadEncodeIdx': 22, 'carControl': 76, 'can': 54, 'controlsState': 75, 'wideRoadEncodeIdx': 20, 'gyroscope': 59, 'uiDebug': 46, 'radarTracks': 12, 'selfdriveState': 78, 'sendcan': 101, 'ubloxRaw': 17, 'carState': 75, 'cabinCameraState': 19, 'pandaStates': 12, 'drivingModelData': 10, 'carOutput': 50, 'deviceState': 2, 'accelerometer': 67, 'gpsLocationExternal': 7, 'wideRoadCameraState': 13, 'qNarrowRoadEncodeIdx': 13, 'cabinEncodeIdx': 15, 'longitudinalPlan': 13, 'radarState': 15, 'narrowRoadCameraState': 17, 'driverMonitoringState': 11, 'driverAssistance': 18, 'soundPressure': 12, 'modelV2': 13, 'deviceMotion': 18, 'cameraOdometry': 16, 'driverStateV2': 13, 'procLog': 3, 'vehicleParameters': 13, 'logMessage': 3, 'operatingSystemLog': 2, 'temperatureSensor': 2, 'ubloxGnss': 13, 'peripheralState': 5, 'managerState': 4, 'lateralDelay': 3, 'lateralTorqueParameters': 4, 'sentinel': 1, 'extrinsicsCalibration': 1, 'onroadEvents': 1, 'clocks': 1, 'carParams': 1, 'thumbnail': 1}\nlive read                  2.15 us/item  [2.14, 2.18]  n=1049\nfield write+encode        22.39 us/item  [22.32, 22.41]  n=1049\nkwargs write+encode        8.85 us/item  [8.83, 8.95]  n=1049\npayload assignment         1.28 us/item  [1.28, 1.29]  n=1049\nCAN cached read           22.63 us/item  [22.49, 22.94]  n=54\nCAN cached write          20.76 us/item  [20.72, 21.13]  n=54\nLogReader parse+scan       1.86 us/item  [1.85, 1.87]  n=1049\ndict export               10.62 us/item  [10.44, 10.83]  n=1049\ncopy+encode                0.72 us/item  [0.72, 0.73]  n=1049\nreader pickle              2.57 us/item  [2.55, 2.59]  n=1049\nLogReader pickle           3.22 us/item  [3.19, 3.26]  n=1049\nschema reflection        132.89 us/item  [132.63, 133.41]  n=1\n",
+      "stderr": "",
+      "returncode": 0,
+      "us_per_item": {
+        "live read": 2.15,
+        "field write+encode": 22.39,
+        "kwargs write+encode": 8.85,
+        "payload assignment": 1.28,
+        "CAN cached read": 22.63,
+        "CAN cached write": 20.76,
+        "LogReader parse+scan": 1.86,
+        "dict export": 10.62,
+        "copy+encode": 0.72,
+        "reader pickle": 2.57,
+        "LogReader pickle": 3.22,
+        "schema reflection": 132.89
+      }
+    },
+    {
+      "name": "candidate",
+      "round": 0,
+      "time": 1790087094.801604,
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "/home/batman/openpilot/.venv/bin/python",
+        "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/benchmarks/bench_openpilot.py",
+        "/tmp/pr3704_logs/1.rlog.zst",
+        "--repeat",
+        "5",
+        "--messages",
+        "1000"
+      ],
+      "stdout": "Python 3.12.13 | capnp 2.2.4 | /tmp/capnp-speed/dynamic/capnp/__init__.py\nsha256=836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde bytes=693448\n{'initData': 2, 'narrowRoadEncodeIdx': 22, 'carControl': 76, 'can': 54, 'controlsState': 75, 'wideRoadEncodeIdx': 20, 'gyroscope': 59, 'uiDebug': 46, 'radarTracks': 12, 'selfdriveState': 78, 'sendcan': 101, 'ubloxRaw': 17, 'carState': 75, 'cabinCameraState': 19, 'pandaStates': 12, 'drivingModelData': 10, 'carOutput': 50, 'deviceState': 2, 'accelerometer': 67, 'gpsLocationExternal': 7, 'wideRoadCameraState': 13, 'qNarrowRoadEncodeIdx': 13, 'cabinEncodeIdx': 15, 'longitudinalPlan': 13, 'radarState': 15, 'narrowRoadCameraState': 17, 'driverMonitoringState': 11, 'driverAssistance': 18, 'soundPressure': 12, 'modelV2': 13, 'deviceMotion': 18, 'cameraOdometry': 16, 'driverStateV2': 13, 'procLog': 3, 'vehicleParameters': 13, 'logMessage': 3, 'operatingSystemLog': 2, 'temperatureSensor': 2, 'ubloxGnss': 13, 'peripheralState': 5, 'managerState': 4, 'lateralDelay': 3, 'lateralTorqueParameters': 4, 'sentinel': 1, 'extrinsicsCalibration': 1, 'onroadEvents': 1, 'clocks': 1, 'carParams': 1, 'thumbnail': 1}\nlive read                  2.15 us/item  [2.15, 2.26]  n=1049\nfield write+encode        22.65 us/item  [22.31, 23.47]  n=1049\nkwargs write+encode        9.38 us/item  [9.36, 9.42]  n=1049\npayload assignment         1.27 us/item  [1.26, 1.33]  n=1049\nCAN cached read           22.13 us/item  [21.78, 22.34]  n=54\nCAN cached write          19.88 us/item  [19.75, 20.09]  n=54\nLogReader parse+scan       1.89 us/item  [1.86, 1.91]  n=1049\ndict export               10.65 us/item  [10.51, 10.84]  n=1049\ncopy+encode                0.70 us/item  [0.70, 0.71]  n=1049\nreader pickle              2.57 us/item  [2.55, 2.60]  n=1049\nLogReader pickle           3.25 us/item  [3.22, 3.34]  n=1049\nschema reflection        133.96 us/item  [133.01, 134.27]  n=1\n",
+      "stderr": "",
+      "returncode": 0,
+      "us_per_item": {
+        "live read": 2.15,
+        "field write+encode": 22.65,
+        "kwargs write+encode": 9.38,
+        "payload assignment": 1.27,
+        "CAN cached read": 22.13,
+        "CAN cached write": 19.88,
+        "LogReader parse+scan": 1.89,
+        "dict export": 10.65,
+        "copy+encode": 0.7,
+        "reader pickle": 2.57,
+        "LogReader pickle": 3.25,
+        "schema reflection": 133.96
+      }
+    },
+    {
+      "name": "candidate",
+      "round": 1,
+      "time": 1790087106.6714346,
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "/home/batman/openpilot/.venv/bin/python",
+        "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/benchmarks/bench_openpilot.py",
+        "/tmp/pr3704_logs/1.rlog.zst",
+        "--repeat",
+        "5",
+        "--messages",
+        "1000"
+      ],
+      "stdout": "Python 3.12.13 | capnp 2.2.4 | /tmp/capnp-speed/dynamic/capnp/__init__.py\nsha256=836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde bytes=693448\n{'initData': 2, 'narrowRoadEncodeIdx': 22, 'carControl': 76, 'can': 54, 'controlsState': 75, 'wideRoadEncodeIdx': 20, 'gyroscope': 59, 'uiDebug': 46, 'radarTracks': 12, 'selfdriveState': 78, 'sendcan': 101, 'ubloxRaw': 17, 'carState': 75, 'cabinCameraState': 19, 'pandaStates': 12, 'drivingModelData': 10, 'carOutput': 50, 'deviceState': 2, 'accelerometer': 67, 'gpsLocationExternal': 7, 'wideRoadCameraState': 13, 'qNarrowRoadEncodeIdx': 13, 'cabinEncodeIdx': 15, 'longitudinalPlan': 13, 'radarState': 15, 'narrowRoadCameraState': 17, 'driverMonitoringState': 11, 'driverAssistance': 18, 'soundPressure': 12, 'modelV2': 13, 'deviceMotion': 18, 'cameraOdometry': 16, 'driverStateV2': 13, 'procLog': 3, 'vehicleParameters': 13, 'logMessage': 3, 'operatingSystemLog': 2, 'temperatureSensor': 2, 'ubloxGnss': 13, 'peripheralState': 5, 'managerState': 4, 'lateralDelay': 3, 'lateralTorqueParameters': 4, 'sentinel': 1, 'extrinsicsCalibration': 1, 'onroadEvents': 1, 'clocks': 1, 'carParams': 1, 'thumbnail': 1}\nlive read                  2.16 us/item  [2.15, 2.20]  n=1049\nfield write+encode        22.54 us/item  [22.50, 22.87]  n=1049\nkwargs write+encode        8.92 us/item  [8.86, 8.92]  n=1049\npayload assignment         1.25 us/item  [1.25, 1.26]  n=1049\nCAN cached read           21.89 us/item  [21.54, 22.03]  n=54\nCAN cached write          19.18 us/item  [19.05, 19.34]  n=54\nLogReader parse+scan       1.88 us/item  [1.87, 1.90]  n=1049\ndict export               10.66 us/item  [10.30, 10.80]  n=1049\ncopy+encode                0.69 us/item  [0.69, 0.69]  n=1049\nreader pickle              2.55 us/item  [2.51, 2.62]  n=1049\nLogReader pickle           3.21 us/item  [3.15, 3.27]  n=1049\nschema reflection        130.92 us/item  [130.72, 132.95]  n=1\n",
+      "stderr": "",
+      "returncode": 0,
+      "us_per_item": {
+        "live read": 2.16,
+        "field write+encode": 22.54,
+        "kwargs write+encode": 8.92,
+        "payload assignment": 1.25,
+        "CAN cached read": 21.89,
+        "CAN cached write": 19.18,
+        "LogReader parse+scan": 1.88,
+        "dict export": 10.66,
+        "copy+encode": 0.69,
+        "reader pickle": 2.55,
+        "LogReader pickle": 3.21,
+        "schema reflection": 130.92
+      }
+    },
+    {
+      "name": "baseline",
+      "round": 1,
+      "time": 1790087118.552565,
+      "command": [
+        "taskset",
+        "-c",
+        "0",
+        "/home/batman/openpilot/.venv/bin/python",
+        "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/benchmarks/bench_openpilot.py",
+        "/tmp/pr3704_logs/1.rlog.zst",
+        "--repeat",
+        "5",
+        "--messages",
+        "1000"
+      ],
+      "stdout": "Python 3.12.13 | capnp 2.2.4 | /tmp/capnp-speed/dynamic-pretrampoline/capnp/__init__.py\nsha256=836f53c3742a79bbce5712f67e19f3cd4fe92e8155b68f5d53b4f42c22fdafde bytes=693448\n{'initData': 2, 'narrowRoadEncodeIdx': 22, 'carControl': 76, 'can': 54, 'controlsState': 75, 'wideRoadEncodeIdx': 20, 'gyroscope': 59, 'uiDebug': 46, 'radarTracks': 12, 'selfdriveState': 78, 'sendcan': 101, 'ubloxRaw': 17, 'carState': 75, 'cabinCameraState': 19, 'pandaStates': 12, 'drivingModelData': 10, 'carOutput': 50, 'deviceState': 2, 'accelerometer': 67, 'gpsLocationExternal': 7, 'wideRoadCameraState': 13, 'qNarrowRoadEncodeIdx': 13, 'cabinEncodeIdx': 15, 'longitudinalPlan': 13, 'radarState': 15, 'narrowRoadCameraState': 17, 'driverMonitoringState': 11, 'driverAssistance': 18, 'soundPressure': 12, 'modelV2': 13, 'deviceMotion': 18, 'cameraOdometry': 16, 'driverStateV2': 13, 'procLog': 3, 'vehicleParameters': 13, 'logMessage': 3, 'operatingSystemLog': 2, 'temperatureSensor': 2, 'ubloxGnss': 13, 'peripheralState': 5, 'managerState': 4, 'lateralDelay': 3, 'lateralTorqueParameters': 4, 'sentinel': 1, 'extrinsicsCalibration': 1, 'onroadEvents': 1, 'clocks': 1, 'carParams': 1, 'thumbnail': 1}\nlive read                  2.18 us/item  [2.17, 2.18]  n=1049\nfield write+encode        22.64 us/item  [22.42, 22.96]  n=1049\nkwargs write+encode        8.86 us/item  [8.84, 8.93]  n=1049\npayload assignment         1.30 us/item  [1.30, 1.30]  n=1049\nCAN cached read           24.21 us/item  [24.03, 24.38]  n=54\nCAN cached write          20.88 us/item  [20.80, 20.99]  n=54\nLogReader parse+scan       1.86 us/item  [1.86, 1.89]  n=1049\ndict export               11.01 us/item  [10.65, 11.24]  n=1049\ncopy+encode                0.73 us/item  [0.73, 0.73]  n=1049\nreader pickle              2.51 us/item  [2.51, 2.55]  n=1049\nLogReader pickle           3.19 us/item  [3.19, 3.30]  n=1049\nschema reflection        134.47 us/item  [134.39, 135.01]  n=1\n",
+      "stderr": "",
+      "returncode": 0,
+      "us_per_item": {
+        "live read": 2.18,
+        "field write+encode": 22.64,
+        "kwargs write+encode": 8.86,
+        "payload assignment": 1.3,
+        "CAN cached read": 24.21,
+        "CAN cached write": 20.88,
+        "LogReader parse+scan": 1.86,
+        "dict export": 11.01,
+        "copy+encode": 0.73,
+        "reader pickle": 2.51,
+        "LogReader pickle": 3.19,
+        "schema reflection": 134.47
+      }
+    }
+  ]
+}

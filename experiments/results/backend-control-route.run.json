@@ -1,0 +1,21 @@
+{
+  "name": "backend-control-route",
+  "cwd": "/tmp/capnp-speed/alternative",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/alternative/control.py",
+    "/tmp/pr3704_logs/1.rlog.zst",
+    "--archive",
+    "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/build/temp.linux-x86_64-cpython-312/capnproto/libcapnp-vendored.a"
+  ],
+  "pythonpath": "/tmp/capnp-speed-pybind-deps:/tmp/capnp-speed/baseline:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "37730aca4d22ef6303b09205f71bb0b79fc892ab",
+  "extensions": {},
+  "started": 1790086477.9936283,
+  "returncode": 0,
+  "elapsed": 4.579400062561035
+}

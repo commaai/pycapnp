@@ -1,0 +1,32 @@
+{
+  "name": "toolchain-clang-pgo-thinlto-native-hidden-heldout",
+  "cwd": "/tmp/capnp-speed/toolchain",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/toolchain/compare.py",
+    "--python",
+    "/home/batman/openpilot/.venv/bin/python",
+    "--openpilot",
+    "/home/batman/openpilot",
+    "--log",
+    "/tmp/opendbc_logs/ascent_1.rlog.zst",
+    "--candidate",
+    "clang-pgo-thinlto-native-hidden",
+    "--cpu",
+    "0",
+    "--label",
+    "root-clang-pgo-thinlto-native-hidden-heldout"
+  ],
+  "pythonpath": "/tmp/capnp-speed/toolchain:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "61c0fc78d7d705f84f06169358278dd784d653b8",
+  "extensions": {
+    "/tmp/capnp-speed/toolchain/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "e24ec361874287ef280d7492528594e2e7d613c32c51461036b15697055faece"
+  },
+  "started": 1790086858.9462807,
+  "returncode": 0,
+  "elapsed": 46.93875241279602
+}

@@ -1,0 +1,21 @@
+Benchmark 1: /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child source
+  Time (mean ± σ):      46.8 ms ±   0.2 ms    [User: 36.1 ms, System: 10.6 ms]
+  Range (min … max):    46.4 ms …  47.2 ms    20 runs
+ 
+Benchmark 2: /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child compiled
+  Time (mean ± σ):      37.4 ms ±   0.3 ms    [User: 28.9 ms, System: 8.5 ms]
+  Range (min … max):    37.0 ms …  38.3 ms    20 runs
+ 
+Benchmark 3: /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child lazy
+  Time (mean ± σ):      33.7 ms ±   0.3 ms    [User: 25.2 ms, System: 8.4 ms]
+  Range (min … max):    33.3 ms …  34.4 ms    20 runs
+ 
+Benchmark 4: /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child create
+  Time (mean ± σ):      48.0 ms ±   0.5 ms    [User: 39.2 ms, System: 8.8 ms]
+  Range (min … max):    47.6 ms …  49.9 ms    20 runs
+ 
+Summary
+  /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child lazy ran
+    1.11 ± 0.01 times faster than /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child compiled
+    1.39 ± 0.02 times faster than /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child source
+    1.43 ± 0.02 times faster than /home/batman/openpilot/.venv/bin/python experiments/allocation/bench_schema.py --child create

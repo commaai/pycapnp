@@ -1,0 +1,23 @@
+{
+  "name": "generated-startup",
+  "cwd": "/tmp/capnp-speed/baseline",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "/tmp/capnp-speed/generated/experiments/generated/startup.py",
+    "/tmp/pr3704_logs/1.rlog.zst",
+    "--repeat",
+    "15"
+  ],
+  "pythonpath": "/tmp/capnp-speed/baseline:/home/batman/openpilot:/tmp/capnp-speed/generated/experiments/generated",
+  "tuning": {},
+  "commit": "b8ec065b16290deb62e309b0443e6a8ccec23259",
+  "extensions": {
+    "/tmp/capnp-speed/baseline/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "44a6f90bcb2834e9f36caa7b2acf4aeff9328bdd4c49feb77122f4d910ff0c5d"
+  },
+  "started": 1790086243.6619365,
+  "returncode": 0,
+  "elapsed": 1.7586555480957031
+}

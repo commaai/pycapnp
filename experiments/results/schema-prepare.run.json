@@ -1,0 +1,21 @@
+{
+  "name": "schema-prepare",
+  "cwd": "/tmp/capnp-speed/allocation",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/allocation/bench_compiled_workload.py",
+    "prepare"
+  ],
+  "pythonpath": "/tmp/capnp-speed/allocation:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "0b2b65c19e5385a9018c7eb00dde05050b8cda7c",
+  "extensions": {
+    "/tmp/capnp-speed/allocation/capnp/lib/capnp.cpython-312-x86_64-linux-gnu.so": "163b0eeb33bf66b98d367f3ff374c3cf5a144b4cab9ac00db32db353856c101b"
+  },
+  "started": 1790086429.5299966,
+  "returncode": 0,
+  "elapsed": 0.10256433486938477
+}

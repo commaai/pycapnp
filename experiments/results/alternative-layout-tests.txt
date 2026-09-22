@@ -1,0 +1,1 @@
+schema scalar/list/default/union-slot rejection checks passed

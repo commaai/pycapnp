@@ -1,0 +1,8 @@
+{
+  "note": "Supplement recorded after timing; these generated extensions were frozen before all root runs and were not rebuilt during them. Consumer benchmarks import these via PYTHONPATH; per-job records cover their own worktree only.",
+  "commit": "b40241af455eae1b7cc8059fce02e99ff75e93bc",
+  "extensions": {
+    "/tmp/capnp-speed/generated/experiments/generated/generated_native.cpython-312-x86_64-linux-gnu.so": "29b72b879463f7fa1b579b4c4b024056b72d508a4dc6750dcee286675a10f787",
+    "/tmp/capnp-speed/generated/experiments/generated/generated_cython.cpython-312-x86_64-linux-gnu.so": "e2e5a8e56eb4e5264b1f31d897f8e13c1d841e575b54dd0873cd69d08b24adc4"
+  }
+}

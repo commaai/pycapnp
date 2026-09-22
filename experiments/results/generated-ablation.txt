@@ -1,0 +1,15 @@
+optimized
+generated_native read       0.39 us/item  [0.39, 0.39]  n=1049
+generated_cython read       0.42 us/item  [0.42, 0.42]  n=1049
+heap handle
+generated_native read       0.46 us/item  [0.46, 0.47]  n=1049
+generated_cython read       0.48 us/item  [0.48, 0.49]  n=1049
+copied input
+generated_native read       0.43 us/item  [0.43, 0.43]  n=1049
+generated_cython read       0.47 us/item  [0.46, 0.48]  n=1049
+uncached union
+generated_native read       0.44 us/item  [0.43, 0.44]  n=1049
+generated_cython read       0.47 us/item  [0.46, 0.47]  n=1049
+optimized confirm
+generated_native read       0.39 us/item  [0.39, 0.40]  n=1049
+generated_cython read       0.42 us/item  [0.42, 0.42]  n=1049

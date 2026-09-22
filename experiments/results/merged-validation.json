@@ -1,0 +1,8 @@
+{
+  "merge_commit": "cd702ba988b198706e4960c66e1f8a194862c70e",
+  "runtime_source_matches": "speed/dynamic",
+  "extension_sha256": "8e4c6b43db9f3c6dee2adfa1c7b5377009fd4ec21014c292d8c4a5622045e017",
+  "command": "OPENPILOT_PATH=/home/batman/openpilot PYTHONPATH=/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp:/home/batman/openpilot:/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/.venv/lib/python3.12/site-packages /home/batman/openpilot/.venv/bin/python -m pytest -q test /home/batman/openpilot/openpilot/cereal/messaging/tests",
+  "result": "382 passed, 1 warning",
+  "benchmark_unchanged": true
+}

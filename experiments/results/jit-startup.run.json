@@ -1,0 +1,22 @@
+{
+  "name": "jit-startup",
+  "cwd": "/tmp/capnp-speed/alternative",
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/batman/openpilot/.venv/bin/python",
+    "experiments/alternative/measure_startup.py",
+    "--runs",
+    "15",
+    "--output",
+    "/tmp/worktrees/tmp.v7Yjr2sXmw/our_capnp/pycapnp/experiments/results/jit-startup.json"
+  ],
+  "pythonpath": "/tmp/capnp-speed-pybind-deps:/tmp/capnp-speed/baseline:/home/batman/openpilot",
+  "tuning": {},
+  "commit": "37730aca4d22ef6303b09205f71bb0b79fc892ab",
+  "extensions": {},
+  "started": 1790086511.8945673,
+  "returncode": 0,
+  "elapsed": 14.73508596420288
+}
