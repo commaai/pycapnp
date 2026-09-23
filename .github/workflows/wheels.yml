@@ -21,8 +21,14 @@ jobs:
         env:
           CIBW_BUILD: cp312-*
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: python -m pytest {project}/test
+          CIBW_TEST_REQUIRES: pytest setuptools
+          CIBW_TEST_COMMAND: >-
+            python -m pytest {project}/test &&
+            cd {project}/native &&
+            rm -rf build build-fixture native_fixture*.so &&
+            python generate.py --schema test.capnp --root Root --module native_fixture --output build-fixture &&
+            CAPNP_NATIVE_OUTPUT=build-fixture CAPNP_NATIVE_MODULE=native_fixture python setup.py build_ext --inplace &&
+            python -m pytest test_native.py
           CMAKE_OSX_ARCHITECTURES: "${{ runner.os == 'macOS' && matrix.arch || '' }}"
       - uses: actions/upload-artifact@v6
         with:

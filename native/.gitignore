@@ -1,0 +1,6 @@
+/build/
+/build-fixture/
+*.so
+__pycache__/
+*.egg-info/
+!/test.capnp
